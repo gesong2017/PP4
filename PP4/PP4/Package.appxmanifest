@@ -7,11 +7,11 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="41f95aef-e7c8-4e24-97b7-05c5c645304a"
+    Name="e4cb402c-c95b-4f4d-9e9a-61826d72b151"
     Publisher="CN=Ge Song"
     Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="41f95aef-e7c8-4e24-97b7-05c5c645304a" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="e4cb402c-c95b-4f4d-9e9a-61826d72b151" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>PP4</DisplayName>
