@@ -126,8 +126,8 @@ void CGame::Initialize()
 	// initialize graphics and the pipeline
 	InitGraphics();
 	InitPipeline();
-	InitWireFrameMode();
-	InitSampleStateMode();
+	//InitWireFrameMode();
+	//InitSampleStateMode();
 
 	// initialize variables
 	Time = 0.0f;
@@ -138,14 +138,14 @@ void CGame::Initialize()
 void CGame::Update()
 {
 	Time += 0.02f;
-	if ((int)Time % 2 == 0) 
-		Wireframe = true;
-	else 
-		Wireframe = false;
-	if ((int)Time % 2 == 0) 
-		Blurred = true;
-    else 
-		Blurred = false;
+	//if ((int)Time % 2 == 0) 
+	//	Wireframe = true;
+	//else 
+	//	Wireframe = false;
+	//if ((int)Time % 2 == 0) 
+	//	Blurred = true;
+ //   else 
+	//	Blurred = false;
 }
 
 // this function renders a single frame of 3D graphics
@@ -200,7 +200,8 @@ void CGame::Render()
 	devcon->UpdateSubresource(constantbuffer.Get(), 0, 0, &cbuffer, 0, 0);
 
 	// tell the GPU which texture to use
-	devcon->PSSetShaderResources(0, 1, textureView.GetAddressOf());
+	devcon->PSSetShaderResources(0, 1, textureView1.GetAddressOf());
+	devcon->PSSetShaderResources(1, 1, textureView2.GetAddressOf());
 
 	// set the appropriate sampler state
 	if (Blurred)
@@ -295,13 +296,24 @@ void CGame::InitGraphics()
 
 	dev->CreateBuffer(&ibd, &isrd, &indexbuffer);
 
-	// load the texture
+	// load the first texture
 	HRESULT hr = CreateDDSTextureFromFile
 	(
 		dev.Get(),
-		L"Assets/texture.dds",
+		L"Assets/texture1.dds",
 		nullptr,
-		&textureView
+		&textureView1,
+		0
+	);
+
+	// load the second texture
+	hr= CreateDDSTextureFromFile
+	(
+		dev.Get(),
+		L"Assets/texture2.dds",
+		nullptr,
+		&textureView2,
+		0
 	);
 }
 

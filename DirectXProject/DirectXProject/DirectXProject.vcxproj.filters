@@ -45,7 +45,10 @@
     <Image Include="Assets\StoreLogo.png">
       <Filter>Assets</Filter>
     </Image>
-    <Image Include="Assets\texture.dds">
+    <Image Include="Assets\texture1.dds">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\texture2.dds">
       <Filter>Assets</Filter>
     </Image>
   </ItemGroup>
