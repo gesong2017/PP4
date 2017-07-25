@@ -48,7 +48,7 @@
     <Image Include="Assets\texture1.dds">
       <Filter>Assets</Filter>
     </Image>
-    <Image Include="Assets\texture2.dds">
+    <Image Include="Assets\talon.dds">
       <Filter>Assets</Filter>
     </Image>
   </ItemGroup>
@@ -57,6 +57,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="DirectXProject_TemporaryKey.pfx" />
+    <None Include="Assets\testpyramid.obj">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="Assets\talon.obj">
+      <Filter>Assets</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="VertexShader.hlsl" />

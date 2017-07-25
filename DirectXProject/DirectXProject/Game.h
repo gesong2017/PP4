@@ -12,10 +12,11 @@ struct VERTEX
 	XMFLOAT3 normal;    // color position
 	XMFLOAT2 uv;
 };
-struct CBUFFER
+struct WorldViewProjectionConstantBuffer
 {
-	XMMATRIX Final;
-	XMMATRIX Rotation;
+    XMFLOAT4X4 worldMatrix;
+    XMFLOAT4X4 viewMatrix;
+	XMFLOAT4X4 projectionMatrix;
 	XMVECTOR DiffuseVector;
 	XMVECTOR DiffuseColor;
 	XMVECTOR AmbientColor;
@@ -33,10 +34,12 @@ public:
 	ComPtr<ID3D11PixelShader> pixelshader;          // the pixel shader interface
 	ComPtr<ID3D11InputLayout> inputlayout;          // the input layout interface
 	ComPtr<ID3D11Buffer> constantbuffer;            // the constant buffer interface
+	WorldViewProjectionConstantBuffer	constantBufferData;
+
 	ComPtr<ID3D11DepthStencilView> zbuffer;         // the depth buffer interface
 	ComPtr<ID3D11Buffer> indexbuffer;               // the index buffer interface
 	ComPtr<ID3D11ShaderResourceView> textureView1;       // the texture interface
-	ComPtr<ID3D11ShaderResourceView> textureView2;       // the second texture view
+	//ComPtr<ID3D11ShaderResourceView> textureView2;       // the second texture view
 	ComPtr<ID3D11RasterizerState> defaultrasterizerstate;     // the rasterizer state for normal rendering
 	ComPtr<ID3D11RasterizerState> wireframerasterizerstate;   // the rasterizer state for wireframe
 	ComPtr<ID3D11SamplerState> samplerstate[2];               // the sampler state interfaces

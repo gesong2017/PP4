@@ -1,9 +1,14 @@
-Texture2D Texture1;
-Texture2D Texture2;
-SamplerState ss;
-float4 main(float4 position : SV_POSITION, float4 color : COLOR, float2 texcoord : TEXCOORD) : SV_TARGET
+Texture2D texture1 : register(t0);
+SamplerState ss : register(s0);
+
+struct PixelShaderInput
+{
+	float4 position : SV_POSITION;
+	float4 color : COLOR;
+	float2 texcoord : TEXCOORD;
+};
+
+float4 main(PixelShaderInput input) : SV_TARGET
 {   
-	float4 Color1 = Texture1.Sample(ss, texcoord);
-	float4 Color2 = Texture2.Sample(ss, texcoord);
-	return Color1 + Color2;
+	return input.color * texture1.Sample(ss, input.texcoord);
 }

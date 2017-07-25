@@ -2,6 +2,7 @@
 #include "Game.h"
 #include <fstream>
 #include "DDSTextureLoader.h"
+#include <vector>
 
 // this function loads a file into an Array^
 Array<byte>^ LoadShaderFile(std::string File)
@@ -25,6 +26,103 @@ Array<byte>^ LoadShaderFile(std::string File)
 	}
 
 	return FileData;
+}
+
+// this function loads a obj file into vectors
+void LoadModelFile(std::string File, std::vector<XMFLOAT3> &out_positions, std::vector<XMFLOAT3> &out_normals, std::vector<XMFLOAT2> &out_uvs)
+{
+	std::vector<std::string> contents;
+	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+	std::vector<XMFLOAT3> temp_positions;
+	std::vector<XMFLOAT2> temp_uvs;
+	std::vector<XMFLOAT3> temp_normals;
+	std::ifstream objFile(File, std::ios::in | std::ios::binary);
+	if (objFile.is_open())
+	{
+		//create a buffer to read current line
+		char buffer[256];
+
+		while (!objFile.eof())
+		{
+			objFile.getline(buffer, 256);
+			contents.push_back(std::string(buffer));
+		}
+		for (unsigned int i = 0; i < contents.size(); i++)
+		{
+			//check if it's a comment or not
+			if (contents[i].c_str()[0] == '#')
+				continue;
+
+			// check if it's a valid vertex position
+			else if (contents[i].c_str()[0] == 'v' && contents[i].c_str()[1] == ' ')
+			{
+				XMFLOAT3 tempPos;
+				sscanf_s(contents[i].c_str(), "v %f %f %f", &tempPos.x, &tempPos.y, &tempPos.z);
+				temp_positions.push_back(tempPos);
+			}
+
+			// check if it's a valid texture coordinate
+			else if (contents[i].c_str()[0] == 'v' && contents[i].c_str()[1] == 't' &&contents[i].c_str()[2] == ' ')
+			{
+				XMFLOAT2 tempUV;
+				sscanf_s(contents[i].c_str(), "vt %f %f", &tempUV.x, &tempUV.y);
+				temp_uvs.push_back(tempUV);
+			}
+
+			//check if it's a valid normal
+			else if (contents[i].c_str()[0] == 'v' && contents[i].c_str()[1] == 'n' &&contents[i].c_str()[2] == ' ')
+			{
+				XMFLOAT3 tempNormal;
+				sscanf_s(contents[i].c_str(), "vn %f %f %f", &tempNormal.x, &tempNormal.y, &tempNormal.z);
+				temp_normals.push_back(tempNormal);
+			}
+
+			//check if it's a valid face
+			else if (contents[i].c_str()[0] == 'f' && contents[i].c_str()[1] == ' ')
+			{
+				unsigned int positionIndex[3], uvIndex[3], normalIndex[3];
+				sscanf_s(contents[i].c_str(), "f %i/%i/%i %i/%i/%i %i/%i/%i",
+					&positionIndex[0], &uvIndex[0], &normalIndex[0],
+					&positionIndex[1], &uvIndex[1], &normalIndex[1],
+					&positionIndex[2], &uvIndex[2], &normalIndex[2]
+				);
+				vertexIndices.push_back(positionIndex[0]);
+				vertexIndices.push_back(positionIndex[1]);
+				vertexIndices.push_back(positionIndex[2]);
+				uvIndices.push_back(uvIndex[0]);
+				uvIndices.push_back(uvIndex[1]);
+				uvIndices.push_back(uvIndex[2]);
+				normalIndices.push_back(normalIndex[0]);
+				normalIndices.push_back(normalIndex[1]);
+				normalIndices.push_back(normalIndex[2]);
+			}
+		}
+		// For each vertex of each triangle
+		for (unsigned int i = 0; i < vertexIndices.size(); i++)
+		{
+			unsigned int vertexIndex = vertexIndices[i];
+			XMFLOAT3 vertexPos = temp_positions[vertexIndex - 1];
+			out_positions.push_back(vertexPos);
+		}
+
+		//For each normal of each triangle
+		for (unsigned int i = 0; i < normalIndices.size(); i++)
+		{
+			unsigned int normalIndex = normalIndices[i];
+			XMFLOAT3 normal = temp_normals[normalIndex - 1];
+			out_normals.push_back(normal);
+		}
+
+		//For each uv of each triangle
+		for (unsigned int i = 0; i < normalIndices.size(); i++)
+		{
+			unsigned int uvIndex = uvIndices[i];
+			XMFLOAT2 uv = temp_uvs[uvIndex - 1];
+			out_uvs.push_back(uv);
+		}
+		objFile.close();
+	}
+
 }
 
 
@@ -146,6 +244,10 @@ void CGame::Update()
 	//	Blurred = true;
  //   else 
 	//	Blurred = false;
+
+	// calculate the world matrices
+	XMMATRIX worldMatrix = XMMatrixRotationY(Time);
+	XMStoreFloat4x4(&constantBufferData.worldMatrix, worldMatrix);
 }
 
 // this function renders a single frame of 3D graphics
@@ -169,39 +271,23 @@ void CGame::Render()
 
 	// set the primitive topology
 	devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	
+	//set the constant buffer
+	devcon->VSSetConstantBuffers(0, 1, constantbuffer.GetAddressOf());
 
-	// calculate the world matrices
-	XMMATRIX matRotate = XMMatrixRotationY(Time);
+	//set the input layout
+	devcon->IASetInputLayout(inputlayout.Get());
 
-	// calculate the view transformation
-	XMVECTOR vecCamPosition = XMVectorSet(0.0f, 3.0f, 8.0f, 0);
-	XMVECTOR vecCamLookAt = XMVectorSet(0, 0, 0, 0);
-	XMVECTOR vecCamUp = XMVectorSet(0, 1, 0, 0);
-	XMMATRIX matView = XMMatrixLookAtLH(vecCamPosition, vecCamLookAt, vecCamUp);
+	// set the shader objects as the active shaders
+	devcon->VSSetShader(vertexshader.Get(), nullptr, 0);
+	devcon->PSSetShader(pixelshader.Get(), nullptr, 0);
 
-	// calculate the projection transformation
-	CoreWindow^ Window = CoreWindow::GetForCurrentThread();    // get the window pointer
-	XMMATRIX matProjection = XMMatrixPerspectiveFovLH(
-		XMConvertToRadians(45),                                      // the field of view
-		(FLOAT)Window->Bounds.Width / (FLOAT)Window->Bounds.Height,  // aspect ratio
-		1,                                                           // the near view-plane
-		100);                                                        // the far view-plane
-
-
-	//Pass the value for constant buffer
-	CBUFFER cbuffer;
-	cbuffer.Final = matRotate * matView * matProjection;
-	cbuffer.Rotation = matRotate;
-	cbuffer.DiffuseVector = XMVectorSet(1.0f, 1.0f, 1.0f, 0.0f);
-	cbuffer.DiffuseColor = XMVectorSet(0.7f, 0.7f, 0.7f, 1.0f);
-	cbuffer.AmbientColor = XMVectorSet(0.2f, 0.2f, 0.2f, 1.0f);
-
-	// send the final matrix to video memory
-	devcon->UpdateSubresource(constantbuffer.Get(), 0, 0, &cbuffer, 0, 0);
+	// send the constant buffer data to video memory
+	devcon->UpdateSubresource(constantbuffer.Get(), 0, 0, &constantBufferData, 0, 0);
 
 	// tell the GPU which texture to use
 	devcon->PSSetShaderResources(0, 1, textureView1.GetAddressOf());
-	devcon->PSSetShaderResources(1, 1, textureView2.GetAddressOf());
+	//devcon->PSSetShaderResources(1, 1, textureView2.GetAddressOf());
 
 	// set the appropriate sampler state
 	if (Blurred)
@@ -224,75 +310,39 @@ void CGame::Render()
 
 // this function loads and initializes all graphics data
 void CGame::InitGraphics()
-{
-	// create vertices to represent the corners of the Hypercraft
-	VERTEX OurVertices[] =
+{    
+	//load obj file into vector
+	std::vector<XMFLOAT3> verticesPos;
+	std::vector<XMFLOAT3> verticesNormal;
+	std::vector<XMFLOAT2> verticesUV;
+	LoadModelFile("Assets/talon.obj", verticesPos, verticesNormal, verticesUV);
+	std::vector<VERTEX> modelvertices;
+	std::vector<short> modelIndices;
+	for (unsigned int i = 0; i < verticesPos.size(); i++)
 	{
-		{XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},    // side 1
-		{XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
-		{XMFLOAT3 (-1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
-		{XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
-
-		{XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT2(0.0f, 0.0f)},    // side 2
-		{XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT2(0.0f, 1.0f)},
-		{XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT2(1.0f, 0.0f)},
-		{XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT2(1.0f, 1.0f)},
-
-		{XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT2(0.0f, 0.0f)},    // side 3
-		{XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT2(0.0f, 1.0f)},
-		{XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT2(1.0f, 0.0f)},
-		{XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT2(1.0f, 1.0f)},
-
-		{XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT2(0.0f, 0.0f)},    // side 4
-		{XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT2(0.0f, 1.0f)},
-		{XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT2(1.0f, 0.0f)},
-		{XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT2(1.0f, 1.0f)},
-
-		{XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(0.0f, 0.0f)},    // side 5
-		{XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(0.0f, 1.0f)},
-		{XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(1.0f, 0.0f)},
-		{XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(1.0f, 1.0f)},
-
-		{XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT2(0.0f, 0.0f)},    // side 6
-		{XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT2(0.0f, 1.0f)},
-		{XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT2(1.0f, 0.0f)},
-		{XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT2(1.0f, 1.0f)},
-	};
+		VERTEX temp;
+		temp.pos = verticesPos[i];
+		temp.normal = verticesNormal[i];
+		temp.uv = verticesUV[i];
+		modelvertices.push_back(temp);
+		modelIndices.push_back(i);
+	}
 
 	// create the vertex buffer
 	D3D11_BUFFER_DESC bd = { 0 };
-	bd.ByteWidth = sizeof(VERTEX) * ARRAYSIZE(OurVertices);
+	bd.ByteWidth = sizeof(VERTEX) * modelvertices.size();
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 
-	D3D11_SUBRESOURCE_DATA srd = { OurVertices, 0, 0 };
+	D3D11_SUBRESOURCE_DATA srd = { &modelvertices[0], 0, 0 };
 
 	dev->CreateBuffer(&bd, &srd, &vertexbuffer);
 
-
-	// create the index buffer out of shorts
-	short OurIndices[] =
-	{
-		0, 1, 2,    // side 1
-		2, 1, 3,
-		4, 5, 6,    // side 2
-		6, 5, 7,
-		8, 9, 10,    // side 3
-		10, 9, 11,
-		12, 13, 14,    // side 4
-		14, 13, 15,
-		16, 17, 18,    // side 5
-		18, 17, 19,
-		20, 21, 22,    // side 6
-		22, 21, 23,
-	};
-
-	m_indexCount = ARRAYSIZE(OurIndices);
-	// create the index buffer
+	//create the index buffer
+	m_indexCount = modelIndices.size();
 	D3D11_BUFFER_DESC ibd = { 0 };
-	ibd.ByteWidth = sizeof(short) * ARRAYSIZE(OurIndices);
+	ibd.ByteWidth = sizeof(short) * modelIndices.size();
 	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-
-	D3D11_SUBRESOURCE_DATA isrd = { OurIndices, 0, 0 };
+	D3D11_SUBRESOURCE_DATA isrd = { &modelIndices[0], 0, 0 };
 
 	dev->CreateBuffer(&ibd, &isrd, &indexbuffer);
 
@@ -300,21 +350,42 @@ void CGame::InitGraphics()
 	HRESULT hr = CreateDDSTextureFromFile
 	(
 		dev.Get(),
-		L"Assets/texture1.dds",
+		L"Assets/talon.dds",
 		nullptr,
 		&textureView1,
 		0
 	);
 
 	// load the second texture
-	hr= CreateDDSTextureFromFile
-	(
-		dev.Get(),
-		L"Assets/texture2.dds",
-		nullptr,
-		&textureView2,
-		0
-	);
+	//hr= CreateDDSTextureFromFile
+	//(
+	//	dev.Get(),
+	//	L"Assets/texture2.dds",
+	//	nullptr,
+	//	&textureView2,
+	//	0
+	//);
+
+	// calculate the view transformation
+	static const XMVECTORF32 eye = { 0.0f, 3.0f, -5.0f, 0.0f };
+	static const XMVECTORF32 at = { 0.0f, 0.0f, 0.0f, 0.0f };
+	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
+	XMStoreFloat4x4(&constantBufferData.viewMatrix, XMMatrixLookAtLH(eye, at, up));
+
+	// calculate the projection transformation
+	CoreWindow^ Window = CoreWindow::GetForCurrentThread();    // get the window pointer
+	XMMATRIX projectionMatrix = XMMatrixPerspectiveFovLH(
+		XMConvertToRadians(45),                                      // the field of view
+		(FLOAT)Window->Bounds.Width / (FLOAT)Window->Bounds.Height,  // aspect ratio
+		0.1f,                                                           // the near view-plane
+		100.0f);                                                        // the far view-plane
+
+	XMStoreFloat4x4(&constantBufferData.projectionMatrix, projectionMatrix);
+
+	//light stuff for constant buffer
+	constantBufferData.DiffuseVector = XMVectorSet(0.0f, 0.0f, -2.0f, 0.0f);
+	constantBufferData.DiffuseColor = XMVectorSet(0.7f, 0.7f, 0.7f, 1.0f);
+	constantBufferData.AmbientColor = XMVectorSet(0.2f, 0.2f, 0.2f, 1.0f);
 }
 
 // this function initializes the GPU settings and prepares it for rendering
@@ -328,9 +399,7 @@ void CGame::InitPipeline()
 	dev->CreateVertexShader(VSFile->Data, VSFile->Length, nullptr, &vertexshader);
 	dev->CreatePixelShader(PSFile->Data, PSFile->Length, nullptr, &pixelshader);
 
-	// set the shader objects as the active shaders
-	devcon->VSSetShader(vertexshader.Get(), nullptr, 0);
-	devcon->PSSetShader(pixelshader.Get(), nullptr, 0);
+
 
 	// initialize input layout
 	D3D11_INPUT_ELEMENT_DESC ied[] =
@@ -340,20 +409,17 @@ void CGame::InitPipeline()
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
-	// create and set the input layout
+	// create the input layout
 	dev->CreateInputLayout(ied, ARRAYSIZE(ied), VSFile->Data, VSFile->Length, &inputlayout);
-	devcon->IASetInputLayout(inputlayout.Get());
 
-	// define and set the constant buffer
+	// define the constant buffer
 	D3D11_BUFFER_DESC bd = { 0 };
 
 	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(CBUFFER);
+	bd.ByteWidth = sizeof(WorldViewProjectionConstantBuffer);
 	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
 	dev->CreateBuffer(&bd, nullptr, &constantbuffer);
-
-	devcon->VSSetConstantBuffers(0, 1, constantbuffer.GetAddressOf());
 }
 
 // this function initializes the WireFrameMode states
