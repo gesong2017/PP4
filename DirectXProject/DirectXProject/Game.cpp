@@ -367,7 +367,7 @@ void CGame::InitGraphics()
 	//);
 
 	// calculate the view transformation
-	static const XMVECTORF32 eye = { 0.0f, 3.0f, -5.0f, 0.0f };
+	static const XMVECTORF32 eye = { 0.0f, 2.0f, -3.0f, 0.0f };
 	static const XMVECTORF32 at = { 0.0f, 0.0f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 	XMStoreFloat4x4(&constantBufferData.viewMatrix, XMMatrixLookAtLH(eye, at, up));
