@@ -22,13 +22,13 @@ ModelClass::~ModelClass()
 }
 
 
-bool ModelClass::Initialize(ID3D11Device* device, WCHAR* textureFilename)
+bool ModelClass::Initialize(ID3D11Device* device, WCHAR* modelFilename, WCHAR* textureFilename)
 {
 	bool result;
 
 
 	// Initialize the vertex and index buffers.
-	result = InitializeBuffers(device);
+	result = InitializeBuffers(device,modelFilename);
 	if(!result)
 	{
 		return false;
@@ -76,51 +76,37 @@ ID3D11ShaderResourceView* ModelClass::GetTexture()
 	return m_Texture->GetTexture();
 }
 
-bool ModelClass::InitializeBuffers(ID3D11Device* device)
+bool ModelClass::InitializeBuffers(ID3D11Device* device, WCHAR* modelFilename)
 {
-	Vertex* vertices;
-	unsigned long* indices;
+	//load obj file into vector
+	vector<XMFLOAT3> verticesPos;
+	vector<XMFLOAT2> verticesUV;
+	vector<XMFLOAT3> verticesNormal;
+	vector<Vertex> modelvertices;
+	vector<unsigned long> modelIndices;
 	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
     D3D11_SUBRESOURCE_DATA vertexData, indexData;
-	HRESULT result;
+	bool result;
+	HRESULT hResult;
 
-
-	// Set the number of vertices in the vertex array.
-	m_vertexCount = 3;
-
-	// Set the number of indices in the index array.
-	m_indexCount = 3;
-
-	// Create the vertex array.
-	vertices = new Vertex[m_vertexCount];
-	if(!vertices)
+	result = LoadObjModel(modelFilename, verticesPos, verticesUV, verticesNormal);
+	if (!result)
 	{
 		return false;
 	}
 
-	// Create the index array.
-	indices = new unsigned long[m_indexCount];
-	if(!indices)
+	for (unsigned int i = 0; i < verticesPos.size(); i++)
 	{
-		return false;
+		Vertex temp;
+		temp.position = verticesPos[i];
+		temp.uv = verticesUV[i];
+		temp.normal = verticesNormal[i];
+		modelvertices.push_back(temp);
+		modelIndices.push_back(i);
 	}
-
-	// Load the vertex array with data.
-	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
-	vertices[0].uv = XMFLOAT2(0.0f, 1.0f);
-
-	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
-	vertices[1].uv = XMFLOAT2(0.5f, 0.0f);
-
-	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
-	vertices[2].uv = XMFLOAT2(1.0f, 1.0f);
-
-	// Load the index array with data.
-	indices[0] = 0;  // Bottom left.
-	indices[1] = 1;  // Top middle.
-	indices[2] = 2;  // Bottom right.
 
 	// Set up the description of the static vertex buffer.
+	m_vertexCount = modelvertices.size();
     vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
     vertexBufferDesc.ByteWidth = sizeof(Vertex) * m_vertexCount;
     vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -129,18 +115,19 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	vertexBufferDesc.StructureByteStride = 0;
 
 	// Give the subresource structure a pointer to the vertex data.
-    vertexData.pSysMem = vertices;
+    vertexData.pSysMem = &modelvertices[0];
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
 	// Now create the vertex buffer.
-    result = device->CreateBuffer(&vertexBufferDesc, &vertexData, &m_vertexBuffer);
-	if(FAILED(result))
+    hResult = device->CreateBuffer(&vertexBufferDesc, &vertexData, &m_vertexBuffer);
+	if(FAILED(hResult))
 	{
 		return false;
 	}
 
 	// Set up the description of the static index buffer.
+	m_indexCount = modelIndices.size();
     indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
     indexBufferDesc.ByteWidth = sizeof(unsigned long) * m_indexCount;
     indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -149,23 +136,16 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	indexBufferDesc.StructureByteStride = 0;
 
 	// Give the subresource structure a pointer to the index data.
-    indexData.pSysMem = indices;
+    indexData.pSysMem = &modelIndices[0];
 	indexData.SysMemPitch = 0;
 	indexData.SysMemSlicePitch = 0;
 
 	// Create the index buffer.
-	result = device->CreateBuffer(&indexBufferDesc, &indexData, &m_indexBuffer);
-	if(FAILED(result))
+	hResult = device->CreateBuffer(&indexBufferDesc, &indexData, &m_indexBuffer);
+	if(FAILED(hResult))
 	{
 		return false;
 	}
-
-	// Release the arrays now that the vertex and index buffers have been created and loaded.
-	delete [] vertices;
-	vertices = 0;
-
-	delete [] indices;
-	indices = 0;
 
 	return true;
 }
@@ -211,6 +191,104 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	return;
+}
+
+bool ModelClass::LoadObjModel(WCHAR* fileName, vector<XMFLOAT3> &out_positions, vector<XMFLOAT2> &out_uvs, vector<XMFLOAT3> &out_normals)
+{
+	vector<std::string> contents;
+	vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+	vector<XMFLOAT3> temp_positions;
+	vector<XMFLOAT2> temp_uvs;
+	vector<XMFLOAT3> temp_normals;
+	ifstream objFile(fileName, ios::in | ios::binary);
+	if (objFile.is_open())
+	{
+		//create a buffer to read current line
+		char buffer[256];
+
+		while (!objFile.eof())
+		{
+			objFile.getline(buffer, 256);
+			contents.push_back(std::string(buffer));
+		}
+		for (unsigned int i = 0; i < contents.size(); i++)
+		{
+			//check if it's a comment or not
+			if (contents[i].c_str()[0] == '#')
+				continue;
+
+			// check if it's a valid vertex position
+			else if (contents[i].c_str()[0] == 'v' && contents[i].c_str()[1] == ' ')
+			{
+				XMFLOAT3 tempPos;
+				sscanf_s(contents[i].c_str(), "v %f %f %f", &tempPos.x, &tempPos.y, &tempPos.z);
+				temp_positions.push_back(tempPos);
+			}
+
+			// check if it's a valid texture coordinate
+			else if (contents[i].c_str()[0] == 'v' && contents[i].c_str()[1] == 't' &&contents[i].c_str()[2] == ' ')
+			{
+				XMFLOAT2 tempUV;
+				sscanf_s(contents[i].c_str(), "vt %f %f", &tempUV.x, &tempUV.y);
+				temp_uvs.push_back(tempUV);
+			}
+
+			//check if it's a valid normal
+			else if (contents[i].c_str()[0] == 'v' && contents[i].c_str()[1] == 'n' &&contents[i].c_str()[2] == ' ')
+			{
+				XMFLOAT3 tempNormal;
+				sscanf_s(contents[i].c_str(), "vn %f %f %f", &tempNormal.x, &tempNormal.y, &tempNormal.z);
+				temp_normals.push_back(tempNormal);
+			}
+
+			//check if it's a valid face
+			else if (contents[i].c_str()[0] == 'f' && contents[i].c_str()[1] == ' ')
+			{
+				unsigned int positionIndex[3], uvIndex[3], normalIndex[3];
+				sscanf_s(contents[i].c_str(), "f %i/%i/%i %i/%i/%i %i/%i/%i",
+					&positionIndex[0], &uvIndex[0], &normalIndex[0],
+					&positionIndex[1], &uvIndex[1], &normalIndex[1],
+					&positionIndex[2], &uvIndex[2], &normalIndex[2]
+				);
+				vertexIndices.push_back(positionIndex[0]);
+				vertexIndices.push_back(positionIndex[1]);
+				vertexIndices.push_back(positionIndex[2]);
+				uvIndices.push_back(uvIndex[0]);
+				uvIndices.push_back(uvIndex[1]);
+				uvIndices.push_back(uvIndex[2]);
+				normalIndices.push_back(normalIndex[0]);
+				normalIndices.push_back(normalIndex[1]);
+				normalIndices.push_back(normalIndex[2]);
+			}
+		}
+		// For each vertex of each triangle
+		for (unsigned int i = 0; i < vertexIndices.size(); i++)
+		{
+			unsigned int vertexIndex = vertexIndices[i];
+			XMFLOAT3 vertexPos = temp_positions[vertexIndex - 1];
+			out_positions.push_back(vertexPos);
+		}
+
+		//For each uv of each triangle
+		for (unsigned int i = 0; i < uvIndices.size(); i++)
+		{
+			unsigned int uvIndex = uvIndices[i];
+			XMFLOAT2 uv = temp_uvs[uvIndex - 1];
+			out_uvs.push_back(uv);
+		}
+
+		//For each normal of each triangle
+		for (unsigned int i = 0; i < normalIndices.size(); i++)
+		{
+			unsigned int normalIndex = normalIndices[i];
+			XMFLOAT3 normal = temp_normals[normalIndex - 1];
+			out_normals.push_back(normal);
+		}
+
+		objFile.close();
+		return true;
+	}
+	return false;
 }
 
 bool ModelClass::LoadTexture(ID3D11Device* device, WCHAR* filename)

@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #ifndef _GRAPHICSCLASS_H_
 #define _GRAPHICSCLASS_H_
-
+#define D3DX_PI 3.1415926535897932384626
 
 ///////////////////////
 // MY CLASS INCLUDES //
@@ -12,6 +12,7 @@
 #include "cameraclass.h"
 #include "modelclass.h"
 #include "shaderclass.h"
+#include "lightclass.h"
 
 
 /////////////
@@ -38,13 +39,14 @@ public:
 	bool Frame();
 
 private:
-	bool Render();
+	bool Render(float);
 
 private:
 	D3DClass* m_Direct3D;
 	CameraClass* m_Camera;
 	ModelClass* m_Model;
 	ShaderClass* m_Shader;
+	LightClass* m_Light;
 };
 
 #endif

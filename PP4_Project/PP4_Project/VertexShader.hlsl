@@ -9,12 +9,14 @@ struct VertexShaderInput
 {
 	float3 posL : POSITION;
 	float2 uv : UV;
+	float3 normal : NORMAL;
 };
 
 struct PixelShaderInput
 {
 	float4 posH : SV_POSITION;
 	float2 uv : UV;
+	float3 normal : NORMAL;
 };
 
 PixelShaderInput main(VertexShaderInput input)
@@ -29,6 +31,12 @@ PixelShaderInput main(VertexShaderInput input)
 	pos = mul(pos, worldMatrix);
 	pos = mul(pos, viewMatrix);
 	pos = mul(pos, projectionMatrix);
+
+	// Calculate the normal vector against the world matrix only.
+	output.normal = mul(input.normal, (float3x3)worldMatrix);
+
+	// Normalize the normal vector.
+	output.normal = normalize(output.normal);
 
 	// Store the value to ouput
 	output.posH = pos;
