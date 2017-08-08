@@ -13,7 +13,8 @@
 #include "modelclass.h"
 #include "shaderclass.h"
 #include "lightclass.h"
-
+#include "bitmapclass.h"
+#include "bitmapshaderclass.h"
 
 /////////////
 // GLOBALS //
@@ -47,6 +48,8 @@ private:
 	ModelClass* m_Model;
 	ShaderClass* m_Shader;
 	LightClass* m_Light;
+	BitmapShaderClass* m_BitmapShader;
+	BitmapClass* m_Bitmap;
 };
 
 #endif

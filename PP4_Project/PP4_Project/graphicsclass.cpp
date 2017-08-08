@@ -11,6 +11,8 @@ GraphicsClass::GraphicsClass()
 	m_Model = 0;
 	m_Shader = 0;
 	m_Light = 0;
+	m_BitmapShader = 0;
+	m_Bitmap = 0;
 }
 
 
@@ -98,12 +100,58 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_Light->SetSpecularPower(32.0f);
 
+	// Create the bitmapshader object.
+	m_BitmapShader = new BitmapShaderClass;
+	if (!m_BitmapShader)
+	{
+		return false;
+	}
+
+	// Initialize the shader object.
+	result = m_BitmapShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the bitmap object.
+	m_Bitmap = new BitmapClass;
+	if (!m_Bitmap)
+	{
+		return false;
+	}
+
+	// Initialize the bitmap object.
+	result = m_Bitmap->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight, L"Box_Red2Dark.dds", screenWidth, screenHeight);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the bitmap object.", L"Error", MB_OK);
+		return false;
+	}
+
 	return true;
 }
 
 
 void GraphicsClass::Shutdown()
 {   
+	// Release the bitmap object.
+	if (m_Bitmap)
+	{
+		m_Bitmap->Shutdown();
+		delete m_Bitmap;
+		m_Bitmap = 0;
+	}
+
+	// Release the bitmap shader object.
+	if (m_BitmapShader)
+	{
+		m_BitmapShader->Shutdown();
+		delete m_BitmapShader;
+		m_BitmapShader = 0;
+	}
+
 	// Release the light object.
 	if (m_Light)
 	{
@@ -111,7 +159,7 @@ void GraphicsClass::Shutdown()
 		m_Light = 0;
 	}
 
-	// Release the color shader object.
+	// Release the shader object.
 	if (m_Shader)
 	{
 		m_Shader->Shutdown();
@@ -171,7 +219,7 @@ bool GraphicsClass::Frame()
 
 bool GraphicsClass::Render(float rotation)
 {
-	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
 	bool result;
 
 
@@ -185,6 +233,29 @@ bool GraphicsClass::Render(float rotation)
 	m_Direct3D->GetWorldMatrix(worldMatrix);
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
+
+	//get the ortho matrix from the D3DClass for 2D rendering
+	m_Direct3D->GetOrthoMatrix(orthoMatrix);
+
+	// Turn off the Z buffer to begin all 2D rendering.
+	m_Direct3D->TurnZBufferOff();
+
+	// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), 0, 0);
+	if (!result)
+	{
+		return false;
+	}
+
+	// Render the bitmap with the bitmap shader.
+	result = m_BitmapShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+	// Turn the Z buffer back on now that all 2D rendering has completed.
+	m_Direct3D->TurnZBufferOn();
 
 	// Rotate the world matrix by the rotation value so that the triangle will spin.
 	worldMatrix = XMMatrixRotationY(rotation);

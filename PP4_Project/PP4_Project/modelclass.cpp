@@ -222,6 +222,7 @@ bool ModelClass::LoadObjModel(WCHAR* fileName, vector<XMFLOAT3> &out_positions, 
 			{
 				XMFLOAT3 tempPos;
 				sscanf_s(contents[i].c_str(), "v %f %f %f", &tempPos.x, &tempPos.y, &tempPos.z);
+				tempPos.z = tempPos.z*(-1.0f);
 				temp_positions.push_back(tempPos);
 			}
 
@@ -230,6 +231,7 @@ bool ModelClass::LoadObjModel(WCHAR* fileName, vector<XMFLOAT3> &out_positions, 
 			{
 				XMFLOAT2 tempUV;
 				sscanf_s(contents[i].c_str(), "vt %f %f", &tempUV.x, &tempUV.y);
+				tempUV.y = 1.0f - tempUV.y;
 				temp_uvs.push_back(tempUV);
 			}
 
@@ -238,6 +240,7 @@ bool ModelClass::LoadObjModel(WCHAR* fileName, vector<XMFLOAT3> &out_positions, 
 			{
 				XMFLOAT3 tempNormal;
 				sscanf_s(contents[i].c_str(), "vn %f %f %f", &tempNormal.x, &tempNormal.y, &tempNormal.z);
+				tempNormal.z = tempNormal.z*(-1.0f);
 				temp_normals.push_back(tempNormal);
 			}
 
@@ -250,15 +253,15 @@ bool ModelClass::LoadObjModel(WCHAR* fileName, vector<XMFLOAT3> &out_positions, 
 					&positionIndex[1], &uvIndex[1], &normalIndex[1],
 					&positionIndex[2], &uvIndex[2], &normalIndex[2]
 				);
-				vertexIndices.push_back(positionIndex[0]);
-				vertexIndices.push_back(positionIndex[1]);
 				vertexIndices.push_back(positionIndex[2]);
-				uvIndices.push_back(uvIndex[0]);
-				uvIndices.push_back(uvIndex[1]);
+				vertexIndices.push_back(positionIndex[1]);
+				vertexIndices.push_back(positionIndex[0]);
 				uvIndices.push_back(uvIndex[2]);
-				normalIndices.push_back(normalIndex[0]);
-				normalIndices.push_back(normalIndex[1]);
+				uvIndices.push_back(uvIndex[1]);
+				uvIndices.push_back(uvIndex[0]);
 				normalIndices.push_back(normalIndex[2]);
+				normalIndices.push_back(normalIndex[1]);
+				normalIndices.push_back(normalIndex[0]);
 			}
 		}
 		// For each vertex of each triangle
