@@ -15,6 +15,8 @@
 #include "lightclass.h"
 #include "bitmapclass.h"
 #include "bitmapshaderclass.h"
+#include "skyboxclass.h"
+#include "skyboxshaderclass.h"
 
 /////////////
 // GLOBALS //
@@ -50,6 +52,9 @@ private:
 	LightClass* m_Light;
 	BitmapShaderClass* m_BitmapShader;
 	BitmapClass* m_Bitmap;
+	SkyboxShaderClass* m_SkyboxShader;
+	SkyboxClass* m_Skybox;
+	XMMATRIX skyboxWorldMatrix;
 };
 
 #endif

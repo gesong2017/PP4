@@ -13,6 +13,9 @@ GraphicsClass::GraphicsClass()
 	m_Light = 0;
 	m_BitmapShader = 0;
 	m_Bitmap = 0;
+	m_SkyboxShader = 0;
+	m_Skybox = 0;
+	skyboxWorldMatrix = XMMatrixIdentity();
 }
 
 
@@ -54,7 +57,68 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Set the initial position of the camera.
-	m_Camera->SetPosition(0.0f, 0.5f, -4.0f);
+	m_Camera->SetPosition(0.0f, 0.5f, -5.0f);
+
+	// Create the bitmapshader object.
+	m_BitmapShader = new BitmapShaderClass;
+	if (!m_BitmapShader)
+	{
+		return false;
+	}
+
+	// Initialize the shader object.
+	result = m_BitmapShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the bitmap object.
+	m_Bitmap = new BitmapClass;
+	if (!m_Bitmap)
+	{
+		return false;
+	}
+
+	// Initialize the bitmap object.
+	result = m_Bitmap->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight, L"Box_Red2Dark.dds", 128, 128);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the bitmap object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the skyboxshader object.
+	m_SkyboxShader = new SkyboxShaderClass;
+	if (!m_SkyboxShader)
+	{
+		return false;
+	}
+
+	// Initialize the skybox shader object.
+	result = m_SkyboxShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the skybox shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the skybox object.
+	m_Skybox = new SkyboxClass;
+	if (!m_Skybox)
+	{
+		return false;
+	}
+
+	// Initialize the skybox object.
+	result = m_Skybox->Initialize(m_Direct3D->GetDevice(), L"SkyboxOcean.dds");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the skybox object.", L"Error", MB_OK);
+		return false;
+	}
+	skyboxWorldMatrix = XMMatrixTranslation(0.0f, 0.5f, -5.0f);
 
 	// Create the model object.
 	m_Model = new ModelClass;
@@ -100,42 +164,28 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_Light->SetSpecularPower(32.0f);
 
-	// Create the bitmapshader object.
-	m_BitmapShader = new BitmapShaderClass;
-	if (!m_BitmapShader)
-	{
-		return false;
-	}
-
-	// Initialize the shader object.
-	result = m_BitmapShader->Initialize(m_Direct3D->GetDevice(), hwnd);
-	if (!result)
-	{
-		MessageBox(hwnd, L"Could not initialize the shader object.", L"Error", MB_OK);
-		return false;
-	}
-
-	// Create the bitmap object.
-	m_Bitmap = new BitmapClass;
-	if (!m_Bitmap)
-	{
-		return false;
-	}
-
-	// Initialize the bitmap object.
-	result = m_Bitmap->Initialize(m_Direct3D->GetDevice(), screenWidth, screenHeight, L"Box_Red2Dark.dds", screenWidth, screenHeight);
-	if (!result)
-	{
-		MessageBox(hwnd, L"Could not initialize the bitmap object.", L"Error", MB_OK);
-		return false;
-	}
-
 	return true;
 }
 
 
 void GraphicsClass::Shutdown()
 {   
+	// Release the skybox object.
+	if (m_Skybox)
+	{
+		m_Skybox->Shutdown();
+		delete m_Skybox;
+		m_Skybox = 0;
+	}
+
+	// Release the skybox shader object.
+	if (m_SkyboxShader)
+	{
+		m_SkyboxShader->Shutdown();
+		delete m_SkyboxShader;
+		m_SkyboxShader = 0;
+	}
+
 	// Release the bitmap object.
 	if (m_Bitmap)
 	{
@@ -234,28 +284,21 @@ bool GraphicsClass::Render(float rotation)
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
-	//get the ortho matrix from the D3DClass for 2D rendering
-	m_Direct3D->GetOrthoMatrix(orthoMatrix);
-
-	// Turn off the Z buffer to begin all 2D rendering.
-	m_Direct3D->TurnZBufferOff();
-
-	// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), 0, 0);
-	if (!result)
-	{
-		return false;
-	}
-
-	// Render the bitmap with the bitmap shader.
-	result = m_BitmapShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
-	if (!result)
-	{
-		return false;
-	}
-
 	// Turn the Z buffer back on now that all 2D rendering has completed.
 	m_Direct3D->TurnZBufferOn();
+
+	// Put the skybox vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_Skybox->Render(m_Direct3D->GetDeviceContext());
+
+	// Render the skybox using the shader.
+	result = m_SkyboxShader->Render(m_Direct3D->GetDeviceContext(), m_Skybox->GetIndexCount(), skyboxWorldMatrix, viewMatrix, projectionMatrix, m_Skybox->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+	// Clear Z Buffer Again for the skyBox
+	m_Direct3D->GetDeviceContext()->ClearDepthStencilView(m_Direct3D->GetDepthBuffer(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	// Rotate the world matrix by the rotation value so that the triangle will spin.
 	worldMatrix = XMMatrixRotationY(rotation);
@@ -271,7 +314,27 @@ bool GraphicsClass::Render(float rotation)
 		return false;
 	}
 
-	// Present the rendered scene to the screen.
+	//get the ortho matrix from the D3DClass for 2D rendering
+	m_Direct3D->GetOrthoMatrix(orthoMatrix);
+
+	// Turn off the Z buffer to begin all 2D rendering.
+	m_Direct3D->TurnZBufferOff();
+
+	// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), 576, 0);
+	if (!result)
+	{
+		return false;
+	}
+
+	// Render the bitmap with the bitmap shader.
+	result = m_BitmapShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), XMMatrixIdentity(), viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+	 //Present the rendered scene to the screen.
 	m_Direct3D->EndScene();
 
 	return true;

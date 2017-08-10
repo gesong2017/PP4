@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bitmapclass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="bitmapshaderclass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -54,11 +51,17 @@
     <ClCompile Include="textureclass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="bitmapclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="skyboxclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="skyboxshaderclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bitmapclass.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="bitmapshaderclass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -92,11 +95,24 @@
     <ClInclude Include="textureclass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="bitmapclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="skyboxclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="skyboxshaderclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="PixelShader.hlsl" />
-    <FxCompile Include="PixelShader1.hlsl" />
-    <FxCompile Include="VertexShader.hlsl" />
-    <FxCompile Include="VertexShader1.hlsl" />
+    <None Include="PixelShader.hlsl" />
+    <None Include="PixelShader1.hlsl" />
+    <None Include="VertexShader.hlsl" />
+    <None Include="VertexShader1.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="SkyboxVertexShader.hlsl" />
+    <FxCompile Include="SkyboxPixelShader.hlsl" />
   </ItemGroup>
 </Project>
