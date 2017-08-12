@@ -15,7 +15,7 @@ GraphicsClass::GraphicsClass()
 	m_Bitmap = 0;
 	m_SkyboxShader = 0;
 	m_Skybox = 0;
-	skyboxWorldMatrix = XMMatrixIdentity();
+	m_Text = 0;
 }
 
 
@@ -32,7 +32,7 @@ GraphicsClass::~GraphicsClass()
 bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
 	bool result;
-
+	XMMATRIX baseViewMatrix;
 
 	// Create the Direct3D object.
 	m_Direct3D = new D3DClass;
@@ -56,8 +56,25 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	// Set the initial position of the camera.
-	m_Camera->SetPosition(0.0f, 0.5f, -5.0f);
+	// Initialize a base view matrix with the camera for 2D user interface rendering.
+	m_Camera->SetPosition(0.0f, 0.5f, -4.0f);
+	m_Camera->Render();
+	m_Camera->GetViewMatrix(baseViewMatrix);
+
+	// Create the text object.
+	m_Text = new TextClass;
+	if (!m_Text)
+	{
+		return false;
+	}
+
+	// Initialize the text object.
+	result = m_Text->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), hwnd, screenWidth, screenHeight, baseViewMatrix);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the text object.", L"Error", MB_OK);
+		return false;
+	}
 
 	// Create the bitmapshader object.
 	m_BitmapShader = new BitmapShaderClass;
@@ -118,7 +135,6 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the skybox object.", L"Error", MB_OK);
 		return false;
 	}
-	skyboxWorldMatrix = XMMatrixTranslation(0.0f, 0.5f, -5.0f);
 
 	// Create the model object.
 	m_Model = new ModelClass;
@@ -170,6 +186,14 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 void GraphicsClass::Shutdown()
 {   
+	// Release the text object.
+	if (m_Text)
+	{
+		m_Text->Shutdown();
+		delete m_Text;
+		m_Text = 0;
+	}
+
 	// Release the skybox object.
 	if (m_Skybox)
 	{
@@ -274,7 +298,7 @@ bool GraphicsClass::Render(float rotation)
 
 
 	// Clear the buffers to begin the scene.
-	m_Direct3D->BeginScene(0.0f, 0.25f, 0.75f, 1.0f);
+	m_Direct3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Generate the view matrix based on the camera's position.
 	m_Camera->Render();
@@ -287,11 +311,14 @@ bool GraphicsClass::Render(float rotation)
 	// Turn the Z buffer back on now that all 2D rendering has completed.
 	m_Direct3D->TurnZBufferOn();
 
+	// Turn off alpha blending after rendering the text.
+	m_Direct3D->TurnOffAlphaBlending();
+
 	// Put the skybox vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	m_Skybox->Render(m_Direct3D->GetDeviceContext());
 
 	// Render the skybox using the shader.
-	result = m_SkyboxShader->Render(m_Direct3D->GetDeviceContext(), m_Skybox->GetIndexCount(), skyboxWorldMatrix, viewMatrix, projectionMatrix, m_Skybox->GetTexture());
+	result = m_SkyboxShader->Render(m_Direct3D->GetDeviceContext(), m_Skybox->GetIndexCount(), XMMatrixTranslation(0.0f, 0.5f, -4.0f), viewMatrix, projectionMatrix, m_Skybox->GetTexture());
 	if (!result)
 	{
 		return false;
@@ -329,6 +356,16 @@ bool GraphicsClass::Render(float rotation)
 
 	// Render the bitmap with the bitmap shader.
 	result = m_BitmapShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), XMMatrixIdentity(), viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+	// Turn on the alpha blending before rendering the text.
+	m_Direct3D->TurnOnAlphaBlending();
+
+	// Render the text strings.
+	result = m_Text->Render(m_Direct3D->GetDeviceContext(), XMMatrixIdentity(), orthoMatrix);
 	if (!result)
 	{
 		return false;

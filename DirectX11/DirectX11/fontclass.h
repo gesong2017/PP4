@@ -1,56 +1,62 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Filename: skyboxclass.h
+// Filename: fontclass.h
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef _SKYBOXCLASS_H_
-#define _SKYBOXCLASS_H_
-
+#ifndef _FONTCLASS_H_
+#define _FONTCLASS_H_
 
 //////////////
 // INCLUDES //
 //////////////
 #include <d3d11.h>
-#include  <DirectXMath.h>
+#include <DirectXMath.h>
+#include <fstream>
 using namespace DirectX;
+using namespace std;
 
 ///////////////////////
 // MY CLASS INCLUDES //
 ///////////////////////
 #include "textureclass.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-// Class name: SkyboxClass
+// Class name: FontClass
 ////////////////////////////////////////////////////////////////////////////////
-class SkyboxClass
+class FontClass
 {
 private:
-	struct SkyboxVertex
+	struct FontType
+	{
+		float left, right;
+		int size;
+	};
+
+	struct FontVertexType
 	{
 		XMFLOAT3 position;
+		XMFLOAT2 texture;
 	};
 
 public:
-	SkyboxClass();
-	SkyboxClass(const SkyboxClass&);
-	~SkyboxClass();
+	FontClass();
+	FontClass(const FontClass&);
+	~FontClass();
 
-	bool Initialize(ID3D11Device*, WCHAR*);
+	bool Initialize(ID3D11Device*, char*, WCHAR*);
 	void Shutdown();
-	void Render(ID3D11DeviceContext*);
 
-	int GetIndexCount();
 	ID3D11ShaderResourceView* GetTexture();
 
-private:
-	bool InitializeBuffers(ID3D11Device*);
-	void ShutdownBuffers();
-	void RenderBuffers(ID3D11DeviceContext*);
+	void BuildVertexArray(void*, char*, float, float);
 
+private:
+	bool LoadFontData(char*);
+	void ReleaseFontData();
 	bool LoadTexture(ID3D11Device*, WCHAR*);
 	void ReleaseTexture();
 
 private:
-	ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
-	int m_vertexCount, m_indexCount;
+	FontType* m_Font;
 	TextureClass* m_Texture;
 };
 

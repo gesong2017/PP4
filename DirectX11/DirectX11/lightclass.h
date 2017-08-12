@@ -1,4 +1,3 @@
-#pragma once
 #ifndef _LIGHTCLASS_H_
 #define _LIGHTCLASS_H_
 

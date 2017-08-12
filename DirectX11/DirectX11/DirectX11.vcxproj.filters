@@ -60,6 +60,15 @@
     <ClCompile Include="skyboxshaderclass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="fontclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fontshaderclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="textclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitmapshaderclass.h">
@@ -104,15 +113,26 @@
     <ClInclude Include="skyboxshaderclass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="fontclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fontshaderclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="textclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="PixelShader.hlsl" />
-    <None Include="PixelShader1.hlsl" />
     <None Include="VertexShader.hlsl" />
-    <None Include="VertexShader1.hlsl" />
+    <None Include="SkyboxPixelShader.hlsl" />
+    <None Include="SkyboxVertexShader.hlsl" />
+    <None Include="BitmapPixelShader.hlsl" />
+    <None Include="BitmapVertexShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="SkyboxVertexShader.hlsl" />
-    <FxCompile Include="SkyboxPixelShader.hlsl" />
+    <FxCompile Include="FontVertexShader.hlsl" />
+    <FxCompile Include="FontPixelShader.hlsl" />
   </ItemGroup>
 </Project>

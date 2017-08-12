@@ -17,7 +17,6 @@ bool TextureClass::Initialize(ID3D11Device* device, WCHAR* filename)
 {
 	HRESULT result;
 
-
 	// Load the texture in.
 	result = CreateDDSTextureFromFile(device, filename, nullptr,&m_texture, 0);
 	if (FAILED(result))
