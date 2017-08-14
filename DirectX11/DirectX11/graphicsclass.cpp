@@ -11,8 +11,8 @@ GraphicsClass::GraphicsClass()
 	m_Model = 0;
 	m_Shader = 0;
 	m_Light = 0;
-	m_BitmapShader = 0;
-	m_Bitmap = 0;
+	//m_BitmapShader = 0;
+	//m_Bitmap = 0;
 	m_SkyboxShader = 0;
 	m_Skybox = 0;
 	m_Text = 0;
@@ -76,6 +76,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	/*
 	// Create the bitmapshader object.
 	m_BitmapShader = new BitmapShaderClass;
 	if (!m_BitmapShader)
@@ -105,6 +106,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the bitmap object.", L"Error", MB_OK);
 		return false;
 	}
+	*/
 
 	// Create the skyboxshader object.
 	m_SkyboxShader = new SkyboxShaderClass;
@@ -129,7 +131,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the skybox object.
-	result = m_Skybox->Initialize(m_Direct3D->GetDevice(), L"SkyboxOcean.dds");
+	result = m_Skybox->Initialize(m_Direct3D->GetDevice(), L"Assets/SkyboxOcean.dds");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the skybox object.", L"Error", MB_OK);
@@ -144,7 +146,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the model object.
-	result = m_Model->Initialize(m_Direct3D->GetDevice(), L"talon.obj", L"talon.dds");
+	result = m_Model->Initialize(m_Direct3D->GetDevice(), L"Assets/talon.obj", L"Assets/talon.dds");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
@@ -210,21 +212,21 @@ void GraphicsClass::Shutdown()
 		m_SkyboxShader = 0;
 	}
 
-	// Release the bitmap object.
-	if (m_Bitmap)
-	{
-		m_Bitmap->Shutdown();
-		delete m_Bitmap;
-		m_Bitmap = 0;
-	}
+	//// Release the bitmap object.
+	//if (m_Bitmap)
+	//{
+	//	m_Bitmap->Shutdown();
+	//	delete m_Bitmap;
+	//	m_Bitmap = 0;
+	//}
 
-	// Release the bitmap shader object.
-	if (m_BitmapShader)
-	{
-		m_BitmapShader->Shutdown();
-		delete m_BitmapShader;
-		m_BitmapShader = 0;
-	}
+	//// Release the bitmap shader object.
+	//if (m_BitmapShader)
+	//{
+	//	m_BitmapShader->Shutdown();
+	//	delete m_BitmapShader;
+	//	m_BitmapShader = 0;
+	//}
 
 	// Release the light object.
 	if (m_Light)
@@ -329,6 +331,9 @@ bool GraphicsClass::Render(float rotation)
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
+	//get the ortho matrix from the D3DClass for 2D rendering
+	m_Direct3D->GetOrthoMatrix(orthoMatrix);
+
 	// Turn the Z buffer back on now that all 2D rendering has completed.
 	m_Direct3D->TurnZBufferOn();
 
@@ -362,26 +367,23 @@ bool GraphicsClass::Render(float rotation)
 		return false;
 	}
 
-	//get the ortho matrix from the D3DClass for 2D rendering
-	m_Direct3D->GetOrthoMatrix(orthoMatrix);
-
 	// Turn off the Z buffer to begin all 2D rendering.
 	m_Direct3D->TurnZBufferOff();
-
+	/*
 	// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	result = m_Bitmap->Render(m_Direct3D->GetDeviceContext(), 576, 0);
 	if (!result)
 	{
-		return false;
+	return false;
 	}
 
 	// Render the bitmap with the bitmap shader.
 	result = m_BitmapShader->Render(m_Direct3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), XMMatrixIdentity(), viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
 	if (!result)
 	{
-		return false;
+	return false;
 	}
-
+	*/
 	// Turn on the alpha blending before rendering the text.
 	m_Direct3D->TurnOnAlphaBlending();
 

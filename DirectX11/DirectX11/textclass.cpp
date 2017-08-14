@@ -12,8 +12,6 @@ TextClass::TextClass()
 	m_sentence2 = 0;
 	m_sentence3 = 0;
 	m_sentence4 = 0;
-	m_sentence5 = 0;
-	m_sentence6 = 0;
 }
 
 TextClass::TextClass(const TextClass& other)
@@ -44,7 +42,7 @@ bool TextClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceCont
 	}
 
 	// Initialize the font object.
-	result = m_Font->Initialize(device, "fontdata.txt", L"font.dds");
+	result = m_Font->Initialize(device, "Assets/fontdata.txt", L"Assets/font.dds");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the font object.", L"Error", MB_OK);
@@ -73,22 +71,8 @@ bool TextClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceCont
 		return false;
 	}
 
-	// Now update the sentence vertex buffer with the new string information.
-	result = UpdateSentence(m_sentence1, "Hello", 620, 50, 0.0f, 1.0f, 0.0f, deviceContext);
-	if (!result)
-	{
-		return false;
-	}
-
-	// Initialize the first sentence.
+	// Initialize the second sentence.
 	result = InitializeSentence(&m_sentence2, 16, device);
-	if (!result)
-	{
-		return false;
-	}
-
-	// Now update the sentence vertex buffer with the new string information.
-	result = UpdateSentence(m_sentence2, "Goodbye", 620, 100, 1.0f, 1.0f, 0.0f, deviceContext);
 	if (!result)
 	{
 		return false;
@@ -103,20 +87,6 @@ bool TextClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceCont
 
 	// Initialize the fourth sentence.
 	result = InitializeSentence(&m_sentence4, 16, device);
-	if (!result)
-	{
-		return false;
-	}
-
-	// Initialize the fifth sentence.
-	result = InitializeSentence(&m_sentence5, 16, device);
-	if (!result)
-	{
-		return false;
-	}
-
-	// Initialize the sixth sentence.
-	result = InitializeSentence(&m_sentence6, 16, device);
 	if (!result)
 	{
 		return false;
@@ -138,12 +108,6 @@ void TextClass::Shutdown()
 
 	// Release the fourth sentence.
 	ReleaseSentence(&m_sentence4);
-
-	// Release the fifth sentence.
-	ReleaseSentence(&m_sentence5);
-
-	// Release the sixth sentence.
-	ReleaseSentence(&m_sentence6);
 
 	// Release the font shader object.
 	if (m_FontShader)
@@ -197,20 +161,6 @@ bool TextClass::Render(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix,
 		return false;
 	}
 
-	// Draw the fifth sentence.
-	result = RenderSentence(deviceContext, m_sentence5, worldMatrix, orthoMatrix);
-	if (!result)
-	{
-		return false;
-	}
-
-	// Draw the sixth sentence.
-	result = RenderSentence(deviceContext, m_sentence6, worldMatrix, orthoMatrix);
-	if (!result)
-	{
-		return false;
-	}
-
 	return true;
 }
 
@@ -229,7 +179,7 @@ bool TextClass::SetMousePosition(int mouseX, int mouseY, ID3D11DeviceContext* de
 	strcat_s(mouseString, tempString);
 
 	// Update the sentence vertex buffer with the new string information.
-	result = UpdateSentence(m_sentence3, mouseString, 20, 20, 1.0f, 0.0f, 0.0f, deviceContext);
+	result = UpdateSentence(m_sentence1, mouseString, 20, 20, 1.0f, 0.0f, 0.0f, deviceContext);
 	if (!result)
 	{
 		return false;
@@ -243,7 +193,7 @@ bool TextClass::SetMousePosition(int mouseX, int mouseY, ID3D11DeviceContext* de
 	strcat_s(mouseString, tempString);
 
 	// Update the sentence vertex buffer with the new string information.
-	result = UpdateSentence(m_sentence4, mouseString, 20, 40, 1.0f, 0.0f, 0.0f, deviceContext);
+	result = UpdateSentence(m_sentence2, mouseString, 20, 40, 1.0f, 0.0f, 0.0f, deviceContext);
 	if (!result)
 	{
 		return false;
@@ -298,7 +248,7 @@ bool TextClass::SetFps(int fps, ID3D11DeviceContext* deviceContext)
 	}
 
 	// Update the sentence vertex buffer with the new string information.
-	result = UpdateSentence(m_sentence5, fpsString, 20, 60, red, green, blue, deviceContext);
+	result = UpdateSentence(m_sentence3, fpsString, 20, 60, red, green, blue, deviceContext);
 	if (!result)
 	{
 		return false;
@@ -323,7 +273,7 @@ bool TextClass::SetCpu(int cpu, ID3D11DeviceContext* deviceContext)
 	strcat_s(cpuString, "%");
 
 	// Update the sentence vertex buffer with the new string information.
-	result = UpdateSentence(m_sentence6, cpuString, 20, 80, 0.0f, 1.0f, 0.0f, deviceContext);
+	result = UpdateSentence(m_sentence4, cpuString, 20, 80, 0.0f, 1.0f, 0.0f, deviceContext);
 	if (!result)
 	{
 		return false;

@@ -56,7 +56,5 @@ private:
 	SentenceType* m_sentence2;
 	SentenceType* m_sentence3;
 	SentenceType* m_sentence4;
-	SentenceType* m_sentence5;
-	SentenceType* m_sentence6;
 };
 #endif

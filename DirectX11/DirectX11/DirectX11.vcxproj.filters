@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Shader Files">
+      <UniqueIdentifier>{e4cc82be-e455-4b7d-b138-f61992b299a3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bitmapshaderclass.cpp">
@@ -142,13 +145,29 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="PixelShader.hlsl" />
-    <None Include="VertexShader.hlsl" />
-    <None Include="SkyboxPixelShader.hlsl" />
-    <None Include="SkyboxVertexShader.hlsl" />
-    <None Include="BitmapPixelShader.hlsl" />
-    <None Include="BitmapVertexShader.hlsl" />
-    <None Include="FontPixelShader.hlsl" />
-    <None Include="FontVertexShader.hlsl" />
+    <None Include="BitmapPixelShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="BitmapVertexShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="FontPixelShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="FontVertexShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="PixelShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="SkyboxPixelShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="SkyboxVertexShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="VertexShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

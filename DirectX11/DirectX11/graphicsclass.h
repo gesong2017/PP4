@@ -51,8 +51,8 @@ private:
 	ModelClass* m_Model;
 	ShaderClass* m_Shader;
 	LightClass* m_Light;
-	BitmapShaderClass* m_BitmapShader;
-	BitmapClass* m_Bitmap;
+	//BitmapShaderClass* m_BitmapShader;
+	//BitmapClass* m_Bitmap;
 	SkyboxShaderClass* m_SkyboxShader;
 	SkyboxClass* m_Skybox;
 	TextClass* m_Text;
