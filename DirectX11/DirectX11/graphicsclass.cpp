@@ -270,7 +270,7 @@ void GraphicsClass::Shutdown()
 }
 
 
-bool GraphicsClass::Frame(int mouseX, int mouseY, int fps, int cpu, float frameTime)
+bool GraphicsClass::Frame(int mouseX, int mouseY, int fps, int cpu, float frameTime,float rotationY)
 {
 	bool result;
 	static float rotation = 0.0f;
@@ -281,6 +281,10 @@ bool GraphicsClass::Frame(int mouseX, int mouseY, int fps, int cpu, float frameT
 	{
 		rotation -= 360.0f;
 	}
+
+
+	// Set the rotation of the camera.
+	m_Camera->SetRotation(0.0f, rotationY, 0.0f);
 
 	// Render the graphics scene.
 	result = Render(rotation);
