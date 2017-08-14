@@ -145,10 +145,12 @@
     <ClCompile Include="bitmapclass.cpp" />
     <ClCompile Include="bitmapshaderclass.cpp" />
     <ClCompile Include="cameraclass.cpp" />
+    <ClCompile Include="cpuclass.cpp" />
     <ClCompile Include="d3dclass.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
     <ClCompile Include="fontclass.cpp" />
     <ClCompile Include="fontshaderclass.cpp" />
+    <ClCompile Include="fpsclass.cpp" />
     <ClCompile Include="graphicsclass.cpp" />
     <ClCompile Include="inputclass.cpp" />
     <ClCompile Include="lightclass.cpp" />
@@ -160,15 +162,18 @@
     <ClCompile Include="systemclass.cpp" />
     <ClCompile Include="textclass.cpp" />
     <ClCompile Include="textureclass.cpp" />
+    <ClCompile Include="timerclass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitmapclass.h" />
     <ClInclude Include="bitmapshaderclass.h" />
     <ClInclude Include="cameraclass.h" />
+    <ClInclude Include="cpuclass.h" />
     <ClInclude Include="d3dclass.h" />
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="fontclass.h" />
     <ClInclude Include="fontshaderclass.h" />
+    <ClInclude Include="fpsclass.h" />
     <ClInclude Include="graphicsclass.h" />
     <ClInclude Include="inputclass.h" />
     <ClInclude Include="lightclass.h" />
@@ -179,6 +184,7 @@
     <ClInclude Include="systemclass.h" />
     <ClInclude Include="textclass.h" />
     <ClInclude Include="textureclass.h" />
+    <ClInclude Include="timerclass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PixelShader.hlsl">
