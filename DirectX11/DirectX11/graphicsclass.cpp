@@ -16,6 +16,7 @@ GraphicsClass::GraphicsClass()
 	m_SkyboxShader = 0;
 	m_Skybox = 0;
 	m_Text = 0;
+	skyboxWorldMatrix = XMMatrixIdentity();
 }
 
 
@@ -60,7 +61,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Camera->SetPosition(0.0f, 0.5f, -4.0f);
 	m_Camera->Render();
 	m_Camera->GetViewMatrix(baseViewMatrix);
-
+	skyboxWorldMatrix = XMMatrixTranslation(0.0f, 0.5f, -4.0f);
 	// Create the text object.
 	m_Text = new TextClass;
 	if (!m_Text)
@@ -270,11 +271,10 @@ void GraphicsClass::Shutdown()
 }
 
 
-bool GraphicsClass::Frame(int mouseX, int mouseY, int fps, int cpu, float frameTime,float rotationY)
+bool GraphicsClass::Frame(int mouseX, int mouseY, int fps, int cpu, float frameTime, float distanceX, float distanceZ, float rotationX, float rotationY)
 {
 	bool result;
 	static float rotation = 0.0f;
-
 	// Update the rotation variable each frame.
 	rotation += (float)D3DX_PI * 0.005f;
 	if (rotation > 360.0f)
@@ -284,8 +284,9 @@ bool GraphicsClass::Frame(int mouseX, int mouseY, int fps, int cpu, float frameT
 
 
 	// Set the rotation of the camera.
-	m_Camera->SetRotation(0.0f, rotationY, 0.0f);
-
+	m_Camera->SetRotation(rotationX, rotationY, 0.0f);
+	m_Camera->SetPosition(distanceX, 0.0f, distanceZ);
+	skyboxWorldMatrix = XMMatrixTranslation(distanceX, 0.0f, distanceZ);
 	// Render the graphics scene.
 	result = Render(rotation);
 	if(!result)
@@ -348,7 +349,7 @@ bool GraphicsClass::Render(float rotation)
 	m_Skybox->Render(m_Direct3D->GetDeviceContext());
 
 	// Render the skybox using the shader.
-	result = m_SkyboxShader->Render(m_Direct3D->GetDeviceContext(), m_Skybox->GetIndexCount(), XMMatrixTranslation(0.0f, 0.5f, -4.0f), viewMatrix, projectionMatrix, m_Skybox->GetTexture());
+	result = m_SkyboxShader->Render(m_Direct3D->GetDeviceContext(), m_Skybox->GetIndexCount(), skyboxWorldMatrix, viewMatrix, projectionMatrix, m_Skybox->GetTexture());
 	if (!result)
 	{
 		return false;

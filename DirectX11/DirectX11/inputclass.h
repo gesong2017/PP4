@@ -35,6 +35,12 @@ public:
 	bool Frame();
 
 	bool IsEscapePressed();
+	bool IsForwardPressed();
+	bool IsBackwardPressed();
+	bool IsLeftwardPressed();
+	bool IsRightwardPressed();
+	bool IsUpArrowPressed();
+	bool IsDownArrowPressed();
 	bool IsLeftArrowPressed();
 	bool IsRightArrowPressed();
 	void GetMouseLocation(int&, int&);

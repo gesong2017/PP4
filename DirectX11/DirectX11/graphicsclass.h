@@ -18,6 +18,7 @@
 #include "skyboxclass.h"
 #include "skyboxshaderclass.h"
 #include "textclass.h"
+#include "frustumclass.h"
 
 /////////////
 // GLOBALS //
@@ -40,7 +41,7 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame(int,int,int, int,float,float);
+	bool Frame(int, int, int, int, float, float, float, float, float);
 
 private:
 	bool Render(float);
@@ -56,6 +57,8 @@ private:
 	SkyboxShaderClass* m_SkyboxShader;
 	SkyboxClass* m_Skybox;
 	TextClass* m_Text;
+	//FrustumClass* m_Frustum;
+	XMMATRIX skyboxWorldMatrix;
 };
 
 #endif

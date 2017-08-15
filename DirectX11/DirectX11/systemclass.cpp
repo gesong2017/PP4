@@ -218,7 +218,7 @@ bool SystemClass::Frame()
 {
 	bool keyDown,result;
 	int mouseX, mouseY;
-	float rotationY;
+	float distanceX, distanceZ, rotationX, rotationY;
 
 	// Update the system stats.
 	m_Timer->Frame();
@@ -228,15 +228,36 @@ bool SystemClass::Frame()
 	// Set the frame time for calculating the updated position.
 	m_Position->SetFrameTime(m_Timer->GetTime());
 
-	// Check if the left or right arrow key has been pressed, if so rotate the camera accordingly.
+	// Check if the arrow key has been pressed, if so rotate the camera accordingly.
+	keyDown = m_Input->IsForwardPressed();
+	m_Position->MoveForward(keyDown);
+
+	keyDown = m_Input->IsBackwardPressed();
+	m_Position->MoveBackward(keyDown);
+
+	keyDown = m_Input->IsLeftwardPressed();
+	m_Position->MoveLeftward(keyDown);
+
+	keyDown = m_Input->IsRightwardPressed();
+	m_Position->MoveRightward(keyDown);
+
+	keyDown = m_Input->IsUpArrowPressed();
+	m_Position->TurnUp(keyDown);
+
+	keyDown = m_Input->IsDownArrowPressed();
+	m_Position->TurnDown(keyDown);
+
 	keyDown = m_Input->IsLeftArrowPressed();
 	m_Position->TurnLeft(keyDown);
 
 	keyDown = m_Input->IsRightArrowPressed();
 	m_Position->TurnRight(keyDown);
 
-	// Get the current view point rotation.
-	m_Position->GetRotation(rotationY);
+	// Get the current view point rotation and distance.
+	m_Position->GetMoveDistanceX(distanceX);
+	m_Position->GetMoveDistanceZ(distanceZ);
+	m_Position->GetRotationX(rotationX);
+	m_Position->GetRotationY(rotationY);
 
 	// Do the input frame processing.
 	result = m_Input->Frame();
@@ -249,7 +270,7 @@ bool SystemClass::Frame()
 	m_Input->GetMouseLocation(mouseX, mouseY);
 
 	// Do the frame processing for the graphics object.
-	result = m_Graphics->Frame(mouseX, mouseY, m_Fps->GetFps(), m_Cpu->GetCpuPercentage(), m_Timer->GetTime(),rotationY);
+	result = m_Graphics->Frame(mouseX, mouseY, m_Fps->GetFps(), m_Cpu->GetCpuPercentage(), m_Timer->GetTime(), distanceX, distanceZ, rotationX, rotationY);
 	if(!result)
 	{
 		return false;
