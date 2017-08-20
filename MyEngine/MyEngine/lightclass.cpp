@@ -45,6 +45,17 @@ void LightClass::SetPosition(float x, float y, float z)
 	return;
 }
 
+void LightClass::SetPointLightDiffuseColor(float red, float green, float blue, float alpha)
+{
+	m_pointlightdiffuseColor = XMFLOAT4(red, green, blue, alpha);
+	return;
+}
+
+void LightClass::SetPointLightPosition(float x, float y, float z)
+{
+	m_pointlightPosition = XMFLOAT4(x, y, z, 1.0f);
+	return;
+}
 
 XMFLOAT4 LightClass::GetAmbientColor()
 {
@@ -68,3 +79,14 @@ XMFLOAT3 LightClass::GetPosition()
 {
 	return m_position;
 }
+
+XMFLOAT4 LightClass::GetPointLightDiffuseColor()
+{
+	return m_pointlightdiffuseColor;
+}
+
+XMFLOAT4 LightClass::GetPointLightPosition()
+{
+	return m_pointlightPosition;
+}
+

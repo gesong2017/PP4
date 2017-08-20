@@ -22,6 +22,7 @@
 #include "skyboxclass.h"
 #include "castleclass.h"
 #include "knightclass.h"
+#include "dragonclass.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: ZoneClass
@@ -44,13 +45,14 @@ private:
 private:
 	UserInterfaceClass* m_UserInterface;
 	CameraClass* m_Camera;
-	LightClass* m_Light;
+	LightClass* m_Light, *m_PointLight1, *m_PointLight2, *m_PointLight3, *m_PointLight4;
 	PositionClass* m_Position;
 	FrustumClass* m_Frustum;
 	TerrainClass* m_Terrain;
 	SkyboxClass* m_Skybox;
 	CastleClass* m_Castle;
 	KnightClass* m_Knight;
+	DragonClass* m_Dragon;
 	bool m_displayUI, m_wireFrame, m_cellLines;
 	unsigned int terraintexture;
 };

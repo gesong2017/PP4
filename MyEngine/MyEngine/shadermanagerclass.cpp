@@ -8,6 +8,7 @@ ShaderManagerClass::ShaderManagerClass()
 	m_ColorShader = 0;
 	m_TextureShader = 0;
 	m_LightShader = 0;
+	m_PointLightShader = 0;
 	m_FontShader = 0;
 	m_SkyboxShader = 0;
 	m_TerrainShader = 0;
@@ -67,6 +68,20 @@ bool ShaderManagerClass::Initialize(ID3D11Device* device, HWND hwnd)
 
 	// Initialize the light shader object.
 	result = m_LightShader->Initialize(device, hwnd);
+	if (!result)
+	{
+		return false;
+	}
+
+	// Create the Point light shader object.
+	m_PointLightShader = new PointLightShaderClass;
+	if (!m_PointLightShader)
+	{
+		return false;
+	}
+
+	// Initialize the light shader object.
+	result = m_PointLightShader->Initialize(device, hwnd);
 	if (!result)
 	{
 		return false;
@@ -166,6 +181,14 @@ void ShaderManagerClass::Shutdown()
 		m_KnightShader = 0;
 	}
 
+	// Release the point light shader object.
+	if (m_PointLightShader)
+	{
+		m_PointLightShader->Shutdown();
+		delete m_PointLightShader;
+		m_PointLightShader = 0;
+	}
+
 	// Release the light shader object.
 	if (m_LightShader)
 	{
@@ -211,6 +234,12 @@ bool ShaderManagerClass::RenderLightShader(ID3D11DeviceContext* deviceContext, i
 	XMFLOAT4 diffuseColor)
 {
 	return m_LightShader->Render(deviceContext, indexCount, worldMatrix, viewMatrix, projectionMatrix, texture, lightDirection, diffuseColor);
+}
+
+bool ShaderManagerClass::RenderPointLightShader(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 diffuseColor[], XMFLOAT4 lightPosition[])
+{
+	return m_PointLightShader->Render(deviceContext, indexCount, worldMatrix, viewMatrix, projectionMatrix, texture, diffuseColor, lightPosition);
 }
 
 bool ShaderManagerClass::RenderKnightShader(ID3D11DeviceContext* deviceContext, int vertexCount, int instanceCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,

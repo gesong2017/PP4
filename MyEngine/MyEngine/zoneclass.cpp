@@ -8,12 +8,17 @@ ZoneClass::ZoneClass()
 	m_UserInterface = 0;
 	m_Camera = 0;
 	m_Light = 0;
+	m_PointLight1 = 0;
+	m_PointLight2 = 0;
+	m_PointLight3 = 0;
+	m_PointLight4 = 0;
 	m_Position = 0;
 	m_Terrain = 0;
 	m_Frustum = 0;
 	m_Skybox = 0;
 	m_Castle = 0;
 	m_Knight = 0;
+	m_Dragon = 0;
 	terraintexture = 0;
 }
 
@@ -70,6 +75,50 @@ bool ZoneClass::Initialize(D3DClass* Direct3D, HWND hwnd, int screenWidth, int s
 	// Initialize the light object.
 	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_Light->SetDirection(-0.5f, -1.0f, -0.5f);
+
+	// Create the point light1 object.
+	m_PointLight1 = new LightClass;
+	if (!m_PointLight1)
+	{
+		return false;
+	}
+
+	// Initialize the point light1 object.
+	m_PointLight1->SetPointLightDiffuseColor(1.0f, 0.0f, 0.0f, 1.0f);
+	m_PointLight1->SetPointLightPosition(-300.0f, 200.0f, 300.0f);
+
+	// Create the point light2 object.
+	m_PointLight2 = new LightClass;
+	if (!m_PointLight2)
+	{
+		return false;
+	}
+
+	// Initialize the point light2 object.
+	m_PointLight2->SetPointLightDiffuseColor(0.0f, 1.0f, 0.0f, 1.0f);
+	m_PointLight2->SetPointLightPosition(300.0f, 200.0f, 300.0f);
+
+	// Create the point light3 object.
+	m_PointLight3 = new LightClass;
+	if (!m_PointLight3)
+	{
+		return false;
+	}
+
+	// Initialize the point light3 object.
+	m_PointLight3->SetPointLightDiffuseColor(0.0f, 0.0f, 1.0f, 1.0f);
+	m_PointLight3->SetPointLightPosition(-300.0f, 100.0f, 300.0f);
+
+	// Create the point light4 object.
+	m_PointLight4 = new LightClass;
+	if (!m_PointLight4)
+	{
+		return false;
+	}
+
+	// Initialize the point light4 object.
+	m_PointLight4->SetPointLightDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_PointLight4->SetPointLightPosition(300.0f, 100.0f, 300.0f);
 
 	// Create the position object.
 	m_Position = new PositionClass;
@@ -152,6 +201,21 @@ bool ZoneClass::Initialize(D3DClass* Direct3D, HWND hwnd, int screenWidth, int s
 		return false;
 	}
 
+	// Create the dragon object.
+	m_Dragon = new DragonClass;
+	if (!m_Dragon)
+	{
+		return false;
+	}
+
+	// Initialize the dragon object.
+	result = m_Dragon->Initialize(Direct3D->GetDevice(), L"Assets/dragon.obj", L"Assets/dragon.dds");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the knight object.", L"Error", MB_OK);
+		return false;
+	}
+
 	// Set the UI to display by default.
 	m_displayUI = true;
 
@@ -167,6 +231,14 @@ bool ZoneClass::Initialize(D3DClass* Direct3D, HWND hwnd, int screenWidth, int s
 
 void ZoneClass::Shutdown()
 {   
+	// Release the dragon object.
+	if (m_Dragon)
+	{
+		m_Dragon->Shutdown();
+		delete m_Dragon;
+		m_Dragon = 0;
+	}
+
 	// Release the knight object.
 	if (m_Knight)
 	{
@@ -211,6 +283,34 @@ void ZoneClass::Shutdown()
 	{
 		delete m_Position;
 		m_Position = 0;
+	}
+
+	// Release the point light4 object.
+	if (m_PointLight4)
+	{
+		delete m_PointLight4;
+		m_PointLight4 = 0;
+	}
+
+	// Release the point light3 object.
+	if (m_PointLight3)
+	{
+		delete m_PointLight3;
+		m_PointLight3 = 0;
+	}
+
+	// Release the point light2 object.
+	if (m_PointLight2)
+	{
+		delete m_PointLight2;
+		m_PointLight2 = 0;
+	}
+
+	// Release the point light1 object.
+	if (m_PointLight1)
+	{
+		delete m_PointLight1;
+		m_PointLight1 = 0;
 	}
 
 	// Release the light object.
@@ -367,9 +467,23 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, baseViewMatrix, orthoMatrix;
 	bool result;
+	XMFLOAT4 pointlightdiffuseColor[4];
+	XMFLOAT4 pointlightPosition[4];
 	XMFLOAT3 cameraPosition;
 	int i;
 	
+	// Create the diffuse color array from the four light colors.
+	pointlightdiffuseColor[0] = m_PointLight1->GetPointLightDiffuseColor();
+	pointlightdiffuseColor[1] = m_PointLight2->GetPointLightDiffuseColor();
+	pointlightdiffuseColor[2] = m_PointLight3->GetPointLightDiffuseColor();
+	pointlightdiffuseColor[3] = m_PointLight4->GetPointLightDiffuseColor();
+
+	// Create the light position array from the four light positions.
+	pointlightPosition[0] = m_PointLight1->GetPointLightPosition();
+	pointlightPosition[1] = m_PointLight2->GetPointLightPosition();
+	pointlightPosition[2] = m_PointLight3->GetPointLightPosition();
+	pointlightPosition[3] = m_PointLight4->GetPointLightPosition();
+
 	// Generate the view matrix based on the camera's position.
 	m_Camera->Render();
 
@@ -431,7 +545,21 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 		return false;
 	}
 
-	//cos(XMConvertToRadians(90));
+	// Render the dragon using the point light shader.
+	XMMATRIX dragonWorldMatrix;
+	dragonWorldMatrix = XMMatrixSet(2.0f*tempmatrix._11, tempmatrix._12, tempmatrix._13, tempmatrix._14,
+		tempmatrix._21, 2.0f*tempmatrix._22, tempmatrix._23, tempmatrix._24,
+		tempmatrix._31, tempmatrix._32, 2.0f*tempmatrix._33, tempmatrix._34,
+		220.0f + tempmatrix._41, 180.0f + tempmatrix._42, -110.0f + tempmatrix._43, tempmatrix._44);
+	dragonWorldMatrix = XMMatrixMultiply(XMMatrixRotationY(380.0f), dragonWorldMatrix);
+	m_Dragon->Render(Direct3D->GetDeviceContext());
+	result = ShaderManager->RenderPointLightShader(Direct3D->GetDeviceContext(), m_Castle->GetIndexCount(), dragonWorldMatrix, viewMatrix,
+		projectionMatrix, m_Dragon->GetTexture(), pointlightdiffuseColor, pointlightPosition);
+	if (!result)
+	{
+		return false;
+	}
+
 	// Render the knight using the knight shader.
 	XMMATRIX knightWorldMatrix;
 	knightWorldMatrix = XMMatrixSet(2.0f*tempmatrix._11, tempmatrix._12, tempmatrix._13, tempmatrix._14,
