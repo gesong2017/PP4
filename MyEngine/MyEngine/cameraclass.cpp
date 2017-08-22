@@ -169,9 +169,9 @@ void CameraClass::RenderBaseViewMatrix()
 	return;
 }
 
-
 void CameraClass::GetBaseViewMatrix(XMMATRIX& viewMatrix)
 {
 	viewMatrix = m_baseViewMatrix;
 	return;
 }
+

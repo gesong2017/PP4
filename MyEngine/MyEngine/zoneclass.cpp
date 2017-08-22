@@ -23,7 +23,6 @@ ZoneClass::ZoneClass()
 	m_Knight = 0;
 	m_Dragon = 0;
 	m_Tower = 0;
-	terraintexture = 0;
 }
 
 
@@ -170,7 +169,7 @@ bool ZoneClass::Initialize(D3DClass* Direct3D, HWND hwnd, int screenWidth, int s
 	}
 
 	// Initialize the debug window object.
-	result = m_DebugWindow->Initialize(Direct3D->GetDevice(), screenWidth, screenHeight, 160, 90);
+	result = m_DebugWindow->Initialize(Direct3D->GetDevice(), screenWidth, screenHeight, screenWidth/8, screenHeight/8);
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the debug window object.", L"Error", MB_OK);
@@ -436,6 +435,8 @@ bool ZoneClass::Frame(D3DClass* Direct3D, InputClass* Input, ShaderManagerClass*
 	bool result;
 	float posX, posY, posZ, rotX, rotY, rotZ;
 
+	// initialize random seed: 
+	srand(time(NULL));
 
 	// Do the frame input processing.
 	HandleMovementInput(Input, frameTime);
@@ -499,30 +500,24 @@ void ZoneClass::HandleMovementInput(InputClass* Input, float frameTime)
 	keyDown = Input->IsDPressed();
 	m_Position->MoveDownward(keyDown);
 
-	//handle the different terraintexture
+	//handle the random light
 	if (Input->Is1Pressed() == true)
 	{
-		terraintexture = 0;
+		m_Light->SetDirection(rand() % 4 - 1.5f, rand() % 3 - 1.0f, rand() % 2 - 0.5f);
 	}
 
 	else if (Input->Is2Pressed() == true)
 	{
-		terraintexture = 2;
+		m_PointLight1->SetPointLightPosition(rand() % 601 - 300.0f, rand() % 601 - 300.0f, rand() % 601 - 300.0f);
+		m_PointLight2->SetPointLightPosition(rand() % 601 - 300.0f, rand() % 601 - 300.0f, rand() % 601 - 300.0f);
+		m_PointLight3->SetPointLightPosition(rand() % 601 - 300.0f, rand() % 601 - 300.0f, rand() % 601 - 300.0f);
+		m_PointLight4->SetPointLightPosition(rand() % 601 - 300.0f, rand() % 601 - 300.0f, rand() % 601 - 300.0f);
 	}
 
 	else if (Input->Is3Pressed() == true)
 	{
-		terraintexture = 4;
-	}
-
-	else if (Input->Is4Pressed() == true)
-	{
-		terraintexture = 6;
-	}
-
-	else if (Input->Is5Pressed() == true)
-	{
-		terraintexture = 8;
+		m_SpotLight->SetSpotLightPosition(rand() % 601 - 300.0f, rand() % 601 - 300.0f, -300.0f);
+		m_SpotLight->SetSpotLightConeDirection(rand() % 3 - 1.0f, rand() % 3 - 1.0f, rand() % 3 - 1.0f);
 	}
 
 	// Get the view point position/rotation.
@@ -577,7 +572,11 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 	pointlightPosition[3] = m_PointLight4->GetPointLightPosition();
 
 	// Render the entire scene to the texture first.
-	RenderToTexture(Direct3D);
+	result = RenderToTexture(Direct3D, ShaderManager, TextureManager);
+	if (!result)
+	{
+		return false;
+	}
 
 	// Generate the view matrix based on the camera's position.
 	m_Camera->Render();
@@ -598,9 +597,9 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 	// Clear the buffers to begin the scene.
 	Direct3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
-	// Turn off back face culling and turn off the Z buffer.
-	Direct3D->TurnOffCulling();
-	Direct3D->TurnZBufferOff();
+	// Turn the Z buffer back and back face culling on.
+	Direct3D->TurnZBufferOn();
+	Direct3D->TurnOnCulling();
 
 	// Translate the skybox to be centered around the camera position.
 	worldMatrix = XMMatrixTranslation(cameraPosition.x, cameraPosition.y, cameraPosition.z);
@@ -619,10 +618,6 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 
 	// Reset the world matrix.
 	Direct3D->GetWorldMatrix(worldMatrix);
-
-	// Turn the Z buffer back and back face culling on.
-	Direct3D->TurnZBufferOn();
-	Direct3D->TurnOnCulling();
 
 	// Render the castle using the castle shader.
 	XMFLOAT4X4 tempmatrix;
@@ -702,7 +697,7 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 		{
 			// Render the cell buffers using the terrain shader.
 			result = ShaderManager->RenderTerrainShader(Direct3D->GetDeviceContext(), m_Terrain->GetCellIndexCount(i), worldMatrix, viewMatrix,
-				projectionMatrix, TextureManager->GetTexture(terraintexture), TextureManager->GetTexture(terraintexture+1),
+				projectionMatrix, TextureManager->GetTexture(0), TextureManager->GetTexture(1),
 				m_Light->GetDirection(), m_Light->GetDiffuseColor());
 			if (!result)
 			{
@@ -766,15 +761,70 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 	return true;
 }
 
-void ZoneClass::RenderToTexture(D3DClass* Direct3D)
-{
+bool ZoneClass::RenderToTexture(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, TextureManagerClass* TextureManager)
+{   
+	bool result;
+
 	// Set the render target to be the render to texture.
 	m_RenderTexture->SetRenderTarget(Direct3D->GetDeviceContext(), Direct3D->GetDepthBuffer());
 
     // Clear the render to texture.
 	m_RenderTexture->ClearRenderTarget(Direct3D->GetDeviceContext(), Direct3D->GetDepthBuffer(), 0.0f, 0.0f, 1.0f, 1.0f);
 
+	// Render the scene now and it will draw to the render to texture instead of the back buffer.
+	result = RenderScene(Direct3D, ShaderManager, TextureManager);
+	if (!result)
+	{
+		return false;
+	}
+
 	// Reset the render target back to the original back buffer and not the render to texture anymore.
 	Direct3D->SetBackBufferRenderTarget();
+	
+	return true;
+}
+
+bool ZoneClass::RenderScene(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, TextureManagerClass* TextureManager)
+{   
+	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	bool result;
+	int i;
+
+	// Get the world, view, and projection matrices from the camera and d3d objects.
+	Direct3D->GetWorldMatrix(worldMatrix);
+	m_Camera->GetViewMatrix(viewMatrix);
+	Direct3D->GetProjectionMatrix(projectionMatrix);
+
+	// Render the terrain cells (and cell lines if needed).
+	for (i = 0; i<m_Terrain->GetCellCount(); i++)
+	{
+		// Render each terrain cell if it is visible only.
+		result = m_Terrain->RenderCell(Direct3D->GetDeviceContext(), i, m_Frustum);
+		if (result)
+		{
+			// Render the cell buffers using the terrain shader.
+			result = ShaderManager->RenderTerrainShader(Direct3D->GetDeviceContext(), m_Terrain->GetCellIndexCount(i), worldMatrix, viewMatrix,
+				projectionMatrix, TextureManager->GetTexture(0), TextureManager->GetTexture(1),
+				m_Light->GetDirection(), m_Light->GetDiffuseColor());
+			if (!result)
+			{
+				return false;
+			}
+
+			// If needed then render the bounding box around this terrain cell using the color shader. 
+			if (m_cellLines)
+			{
+				m_Terrain->RenderCellLines(Direct3D->GetDeviceContext(), i);
+				ShaderManager->RenderColorShader(Direct3D->GetDeviceContext(), m_Terrain->GetCellLinesIndexCount(i), worldMatrix,
+					viewMatrix, projectionMatrix);
+				if (!result)
+				{
+					return false;
+				}
+			}
+		}
+	}
+
+	return true;
 }
 

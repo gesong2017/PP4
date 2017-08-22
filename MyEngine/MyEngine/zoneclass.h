@@ -7,6 +7,8 @@
 ///////////////////////
 // MY CLASS INCLUDES //
 ///////////////////////
+#include <stdlib.h> 
+#include <time.h>     
 #include <math.h>
 #include "d3dclass.h"
 #include "inputclass.h"
@@ -44,7 +46,8 @@ public:
 private:
 	void HandleMovementInput(InputClass*, float);
 	bool Render(D3DClass*, ShaderManagerClass*, TextureManagerClass*);
-	void RenderToTexture(D3DClass*);
+	bool RenderToTexture(D3DClass*, ShaderManagerClass*, TextureManagerClass*);
+	bool RenderScene(D3DClass*, ShaderManagerClass*, TextureManagerClass*);
 
 private:
 	UserInterfaceClass* m_UserInterface;
@@ -61,7 +64,6 @@ private:
 	DragonClass* m_Dragon;
 	TowerClass* m_Tower;
 	bool m_displayUI, m_wireFrame, m_cellLines;
-	unsigned int terraintexture;
 };
 
 #endif
