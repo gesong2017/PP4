@@ -1,5 +1,3 @@
-#define NUM_LIGHTS 4
-
 cbuffer MatrixBuffer
 {
 	matrix worldMatrix;
@@ -9,7 +7,7 @@ cbuffer MatrixBuffer
 
 cbuffer LightPositionBuffer
 {
-	float4 lightPosition[NUM_LIGHTS];
+	float4 lightPosition;
 };
 
 struct VertexInputType
@@ -24,10 +22,7 @@ struct PixelInputType
 	float4 position : SV_POSITION;
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-	float3 lightPos1 : TEXCOORD1;
-	float3 lightPos2 : TEXCOORD2;
-	float3 lightPos3 : TEXCOORD3;
-	float3 lightPos4 : TEXCOORD4;
+	float3 lightDirection : TEXCOORD1;
 };
 
 PixelInputType main(VertexInputType input)
@@ -54,17 +49,9 @@ PixelInputType main(VertexInputType input)
 	output.position = pos;
 	output.tex = input.tex;
 
-	// Determine the light positions based on the position of the lights and the position of the vertex in the world.
-	output.lightPos1.xyz = lightPosition[0].xyz - worldPosition.xyz;
-	output.lightPos2.xyz = lightPosition[1].xyz - worldPosition.xyz;
-	output.lightPos3.xyz = lightPosition[2].xyz - worldPosition.xyz;
-	output.lightPos4.xyz = lightPosition[3].xyz - worldPosition.xyz;
-
-	// Normalize the light position vectors.
-	output.lightPos1 = normalize(output.lightPos1);
-	output.lightPos2 = normalize(output.lightPos2);
-	output.lightPos3 = normalize(output.lightPos3);
-	output.lightPos4 = normalize(output.lightPos4);
+	// Determine the light direction based on the position of the lights and the position of the vertex in the world.
+	output.lightDirection.xyz = lightPosition.xyz - worldPosition.xyz;
+	output.lightDirection = normalize(output.lightDirection);
 
 	return output;
 }

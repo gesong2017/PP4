@@ -111,6 +111,27 @@
     <ClCompile Include="knightshaderclass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dragonclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pointlightshaderclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="spotlightshaderclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="towerclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="castleshaderclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rendertextureclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="debugwindowclass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="applicationclass.h">
@@ -203,6 +224,27 @@
     <ClInclude Include="knightshaderclass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dragonclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pointlightshaderclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="spotlightshaderclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="towerclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="castleshaderclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rendertextureclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="debugwindowclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="FontPixelShader.hlsl">
@@ -241,12 +283,30 @@
     <None Include="TerrainVertexShader.hlsl">
       <Filter>Shader Files</Filter>
     </None>
+    <None Include="KnightPixelShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="KnightVertexShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="PointLightPixelShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="PointLightVertexShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="SpotLightPixelShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="SpotLightVertexShader.hlsl">
+      <Filter>Shader Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="CatVertexShader.hlsl">
+    <FxCompile Include="CastleVertexShader.hlsl">
       <Filter>Shader Files</Filter>
     </FxCompile>
-    <FxCompile Include="CatPixelShader.hlsl">
+    <FxCompile Include="CastlePixelShader.hlsl">
       <Filter>Shader Files</Filter>
     </FxCompile>
   </ItemGroup>

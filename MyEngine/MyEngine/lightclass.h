@@ -26,6 +26,10 @@ public:
 	void SetPosition(float, float, float);
 	void SetPointLightDiffuseColor(float, float, float, float);
 	void SetPointLightPosition(float, float, float);
+	void SetSpotLightDiffuseColor(float, float, float, float);
+	void SetSpotLightPosition(float, float, float);
+	void SetSpotLightConeDirection(float, float, float);
+	void SetSpotLightConeRatio(float);
 
 	XMFLOAT4 GetAmbientColor();
 	XMFLOAT4 GetDiffuseColor();
@@ -33,6 +37,10 @@ public:
 	XMFLOAT3 GetPosition();
 	XMFLOAT4 GetPointLightDiffuseColor();
 	XMFLOAT4 GetPointLightPosition();
+	XMFLOAT4 GetSpotLightDiffuseColor();
+	XMFLOAT4 GetSpotLightPosition();
+	XMFLOAT3 GetSpotLightConeDirection();
+	float GetSpotLightConeRatio();
 
 private:
 	XMFLOAT4 m_ambientColor;
@@ -41,6 +49,10 @@ private:
 	XMFLOAT3 m_position;
 	XMFLOAT4 m_pointlightdiffuseColor;
 	XMFLOAT4 m_pointlightPosition;
+	XMFLOAT4 m_spotlightdiffuseColor;
+	XMFLOAT4 m_spotlightPosition;
+	XMFLOAT3 m_spotlightconeDirection;
+	float m_spotlightconeRatio;
 };
 
 #endif

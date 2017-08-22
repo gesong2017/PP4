@@ -12,13 +12,17 @@ ZoneClass::ZoneClass()
 	m_PointLight2 = 0;
 	m_PointLight3 = 0;
 	m_PointLight4 = 0;
+	m_SpotLight = 0;
 	m_Position = 0;
+	m_RenderTexture = 0;
+	m_DebugWindow = 0;
 	m_Terrain = 0;
 	m_Frustum = 0;
 	m_Skybox = 0;
 	m_Castle = 0;
 	m_Knight = 0;
 	m_Dragon = 0;
+	m_Tower = 0;
 	terraintexture = 0;
 }
 
@@ -120,6 +124,19 @@ bool ZoneClass::Initialize(D3DClass* Direct3D, HWND hwnd, int screenWidth, int s
 	m_PointLight4->SetPointLightDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_PointLight4->SetPointLightPosition(300.0f, 100.0f, 300.0f);
 
+	// Create the spot light object.
+	m_SpotLight = new LightClass;
+	if (!m_SpotLight)
+	{
+		return false;
+	}
+
+	// Initialize the spot light object.
+	m_SpotLight->SetSpotLightDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
+	m_SpotLight->SetSpotLightPosition(300.0f, 50.0f, -300.0f);
+	m_SpotLight->SetSpotLightConeDirection(1.0f, 1.0f, 1.0f);
+	m_SpotLight->SetSpotLightConeRatio(0.2f);
+
 	// Create the position object.
 	m_Position = new PositionClass;
 	if(!m_Position)
@@ -130,6 +147,35 @@ bool ZoneClass::Initialize(D3DClass* Direct3D, HWND hwnd, int screenWidth, int s
 	// Set the initial position and rotation.
 	m_Position->SetPosition(160.0f, 30.0f, 640.0f);
 	m_Position->SetRotation(0.0f, 180.0f, 0.0f);
+
+	// Create the render to texture object.
+	m_RenderTexture = new RenderTextureClass;
+	if (!m_RenderTexture)
+	{
+		return false;
+	}
+
+	// Initialize the render to texture object.
+	result = m_RenderTexture->Initialize(Direct3D->GetDevice(), screenWidth, screenHeight);
+	if (!result)
+	{
+		return false;
+	}
+
+	// Create the debug window object.
+	m_DebugWindow = new DebugWindowClass;
+	if (!m_DebugWindow)
+	{
+		return false;
+	}
+
+	// Initialize the debug window object.
+	result = m_DebugWindow->Initialize(Direct3D->GetDevice(), screenWidth, screenHeight, 160, 90);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the debug window object.", L"Error", MB_OK);
+		return false;
+	}
 
 	// Create the frustum object.
 	m_Frustum = new FrustumClass;
@@ -212,7 +258,22 @@ bool ZoneClass::Initialize(D3DClass* Direct3D, HWND hwnd, int screenWidth, int s
 	result = m_Dragon->Initialize(Direct3D->GetDevice(), L"Assets/dragon.obj", L"Assets/dragon.dds");
 	if (!result)
 	{
-		MessageBox(hwnd, L"Could not initialize the knight object.", L"Error", MB_OK);
+		MessageBox(hwnd, L"Could not initialize the dragon object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the tower object.
+	m_Tower = new TowerClass;
+	if (!m_Tower)
+	{
+		return false;
+	}
+
+	// Initialize the tower object.
+	result = m_Tower->Initialize(Direct3D->GetDevice(), L"Assets/tower.obj", L"Assets/tower.dds");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the tower object.", L"Error", MB_OK);
 		return false;
 	}
 
@@ -231,6 +292,14 @@ bool ZoneClass::Initialize(D3DClass* Direct3D, HWND hwnd, int screenWidth, int s
 
 void ZoneClass::Shutdown()
 {   
+	// Release the tower object.
+	if (m_Tower)
+	{
+		m_Tower->Shutdown();
+		delete m_Tower;
+		m_Tower = 0;
+	}
+
 	// Release the dragon object.
 	if (m_Dragon)
 	{
@@ -278,11 +347,34 @@ void ZoneClass::Shutdown()
 		m_Frustum = 0;
 	}
 
+	// Release the debug window object.
+	if (m_DebugWindow)
+	{
+		m_DebugWindow->Shutdown();
+		delete m_DebugWindow;
+		m_DebugWindow = 0;
+	}
+
+	// Release the render to texture object.
+	if (m_RenderTexture)
+	{
+		m_RenderTexture->Shutdown();
+		delete m_RenderTexture;
+		m_RenderTexture = 0;
+	}
+
 	// Release the position object.
 	if(m_Position)
 	{
 		delete m_Position;
 		m_Position = 0;
+	}
+
+	// Release the spot light object.
+	if (m_SpotLight)
+	{
+		delete m_SpotLight;
+		m_SpotLight = 0;
 	}
 
 	// Release the point light4 object.
@@ -484,6 +576,9 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 	pointlightPosition[2] = m_PointLight3->GetPointLightPosition();
 	pointlightPosition[3] = m_PointLight4->GetPointLightPosition();
 
+	// Render the entire scene to the texture first.
+	RenderToTexture(Direct3D);
+
 	// Generate the view matrix based on the camera's position.
 	m_Camera->Render();
 
@@ -529,7 +624,7 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 	Direct3D->TurnZBufferOn();
 	Direct3D->TurnOnCulling();
 
-	// Render the castle using the light shader.
+	// Render the castle using the castle shader.
 	XMFLOAT4X4 tempmatrix;
 	XMStoreFloat4x4(&tempmatrix, worldMatrix);
 	XMMATRIX castleworldmatrix;
@@ -538,8 +633,8 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 		                            tempmatrix._31, tempmatrix._32, 0.1f*tempmatrix._33, tempmatrix._34,
 		                            170.0f+tempmatrix._41, 11.0f+tempmatrix._42, 435.0f+tempmatrix._43, tempmatrix._44);
 	m_Castle->Render(Direct3D->GetDeviceContext());
-	result = ShaderManager->RenderLightShader(Direct3D->GetDeviceContext(), m_Castle->GetIndexCount(), castleworldmatrix, viewMatrix,
-		projectionMatrix, m_Castle->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor());
+	result = ShaderManager->RenderCastleShader(Direct3D->GetDeviceContext(), m_Castle->GetIndexCount(), castleworldmatrix, viewMatrix,
+		projectionMatrix, m_Castle->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor(), pointlightdiffuseColor[0], pointlightPosition[0]);
 	if (!result)
 	{
 		return false;
@@ -560,6 +655,22 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 		return false;
 	}
 
+	// Render the tower using the tower shader.
+	XMMATRIX towerWorldMatrix;
+	towerWorldMatrix = XMMatrixSet(0.1f*tempmatrix._11, tempmatrix._12, tempmatrix._13, tempmatrix._14,
+		tempmatrix._21, 0.1f*tempmatrix._22, tempmatrix._23, tempmatrix._24,
+		tempmatrix._31, tempmatrix._32, 0.1f*tempmatrix._33, tempmatrix._34,
+		250.0f + tempmatrix._41, 8.0f + tempmatrix._42, 570.0f + tempmatrix._43, tempmatrix._44);
+
+	m_Tower->Render(Direct3D->GetDeviceContext());
+	result = ShaderManager->RenderSpotLightShader(Direct3D->GetDeviceContext(), m_Tower->GetIndexCount(), towerWorldMatrix, viewMatrix,
+		projectionMatrix, m_Tower->GetTexture(), m_SpotLight->GetSpotLightConeRatio(), m_SpotLight->GetSpotLightConeDirection(),
+		m_SpotLight->GetSpotLightDiffuseColor(), m_SpotLight->GetSpotLightPosition());
+	if (!result)
+	{
+		return false;
+	}
+
 	// Render the knight using the knight shader.
 	XMMATRIX knightWorldMatrix;
 	knightWorldMatrix = XMMatrixSet(2.0f*tempmatrix._11, tempmatrix._12, tempmatrix._13, tempmatrix._14,
@@ -570,7 +681,7 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 	knightWorldMatrix = XMMatrixMultiply(XMMatrixRotationY(380.0f), knightWorldMatrix);
 	m_Knight->Render(Direct3D->GetDeviceContext());
 	result = ShaderManager->RenderKnightShader(Direct3D->GetDeviceContext(), m_Knight->GetVertexCount(), m_Knight->GetInstanceCount(), knightWorldMatrix, viewMatrix,
-		projectionMatrix, m_Castle->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor());
+		projectionMatrix, m_Knight->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor());
 	if (!result)
 	{
 		return false;
@@ -618,6 +729,19 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 		Direct3D->DisableWireframe();
 	}
 
+	// Turn off back face culling and turn off the Z buffer.
+	Direct3D->TurnOffCulling();
+	Direct3D->TurnZBufferOff();
+
+	// Render the debugwindow using the texture shader.
+	m_DebugWindow->Render(Direct3D->GetDeviceContext(), 1000, 50);
+	result = ShaderManager->RenderTextureShader(Direct3D->GetDeviceContext(), m_DebugWindow->GetIndexCount(), worldMatrix, baseViewMatrix,
+		orthoMatrix, m_RenderTexture->GetShaderResourceView());
+	if (!result)
+	{
+		return false;
+	}
+
 	// Update the render counts in the UI.
 	result = m_UserInterface->UpdateRenderCounts(Direct3D->GetDeviceContext(), m_Terrain->GetRenderCount(), m_Terrain->GetCellsDrawn(),
 		m_Terrain->GetCellsCulled());
@@ -641,3 +765,16 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 
 	return true;
 }
+
+void ZoneClass::RenderToTexture(D3DClass* Direct3D)
+{
+	// Set the render target to be the render to texture.
+	m_RenderTexture->SetRenderTarget(Direct3D->GetDeviceContext(), Direct3D->GetDepthBuffer());
+
+    // Clear the render to texture.
+	m_RenderTexture->ClearRenderTarget(Direct3D->GetDeviceContext(), Direct3D->GetDepthBuffer(), 0.0f, 0.0f, 1.0f, 1.0f);
+
+	// Reset the render target back to the original back buffer and not the render to texture anymore.
+	Direct3D->SetBackBufferRenderTarget();
+}
+

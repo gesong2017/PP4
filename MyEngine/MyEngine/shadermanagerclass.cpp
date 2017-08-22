@@ -9,9 +9,11 @@ ShaderManagerClass::ShaderManagerClass()
 	m_TextureShader = 0;
 	m_LightShader = 0;
 	m_PointLightShader = 0;
+	m_SpotLightShader = 0;
 	m_FontShader = 0;
 	m_SkyboxShader = 0;
 	m_TerrainShader = 0;
+	m_CastleShader = 0;
 	m_KnightShader = 0;
 }
 
@@ -80,8 +82,22 @@ bool ShaderManagerClass::Initialize(ID3D11Device* device, HWND hwnd)
 		return false;
 	}
 
-	// Initialize the light shader object.
+	// Initialize the point light shader object.
 	result = m_PointLightShader->Initialize(device, hwnd);
+	if (!result)
+	{
+		return false;
+	}
+
+	// Create the spot light shader object.
+	m_SpotLightShader = new SpotLightShaderClass;
+	if (!m_SpotLightShader)
+	{
+		return false;
+	}
+
+	// Initialize the spot light shader object.
+	result = m_SpotLightShader->Initialize(device, hwnd);
 	if (!result)
 	{
 		return false;
@@ -129,6 +145,20 @@ bool ShaderManagerClass::Initialize(ID3D11Device* device, HWND hwnd)
 		return false;
 	}
 
+	// Create the castle shader object.
+	m_CastleShader = new CastleShaderClass;
+	if (!m_CastleShader)
+	{
+		return false;
+	}
+
+	// Initialize the castle shader object.
+	result = m_CastleShader->Initialize(device, hwnd);
+	if (!result)
+	{
+		return false;
+	}
+
 	// Create the Knight shader object.
 	m_KnightShader = new KnightShaderClass;
 	if (!m_KnightShader)
@@ -149,6 +179,14 @@ bool ShaderManagerClass::Initialize(ID3D11Device* device, HWND hwnd)
 
 void ShaderManagerClass::Shutdown()
 {   
+	// Release the castle shader object.
+	if (m_CastleShader)
+	{
+		m_CastleShader->Shutdown();
+		delete m_CastleShader;
+		m_CastleShader = 0;
+	}
+
 	// Release the terrain shader object.
 	if (m_TerrainShader)
 	{
@@ -179,6 +217,14 @@ void ShaderManagerClass::Shutdown()
 		m_KnightShader->Shutdown();
 		delete m_KnightShader;
 		m_KnightShader = 0;
+	}
+
+	// Release the spot light shader object.
+	if (m_SpotLightShader)
+	{
+		m_SpotLightShader->Shutdown();
+		delete m_SpotLightShader;
+		m_SpotLightShader = 0;
 	}
 
 	// Release the point light shader object.
@@ -242,6 +288,13 @@ bool ShaderManagerClass::RenderPointLightShader(ID3D11DeviceContext* deviceConte
 	return m_PointLightShader->Render(deviceContext, indexCount, worldMatrix, viewMatrix, projectionMatrix, texture, diffuseColor, lightPosition);
 }
 
+bool ShaderManagerClass::RenderSpotLightShader(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, float coneRatio, XMFLOAT3 lightConeDirection,
+	XMFLOAT4 diffuseColor, XMFLOAT4 lightPosition)
+{
+	return m_SpotLightShader->Render(deviceContext, indexCount, worldMatrix, viewMatrix, projectionMatrix, texture, coneRatio, lightConeDirection, diffuseColor, lightPosition);
+}
+
 bool ShaderManagerClass::RenderKnightShader(ID3D11DeviceContext* deviceContext, int vertexCount, int instanceCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
 	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection,
 	XMFLOAT4 diffuseColor)
@@ -265,4 +318,10 @@ bool ShaderManagerClass::RenderTerrainShader(ID3D11DeviceContext* deviceContext,
 	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* normalMap, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor)
 {
 	return m_TerrainShader->Render(deviceContext, indexCount, worldMatrix, viewMatrix, projectionMatrix, texture, normalMap, lightDirection, diffuseColor);
+}
+
+bool ShaderManagerClass::RenderCastleShader(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 dlightDirection, XMFLOAT4 dlightdiffuseColor, XMFLOAT4 plightdiffuseColor, XMFLOAT4 plightPosition)
+{
+	return m_CastleShader->Render(deviceContext, indexCount, worldMatrix, viewMatrix, projectionMatrix, texture, dlightDirection, dlightdiffuseColor, plightdiffuseColor, plightPosition);
 }

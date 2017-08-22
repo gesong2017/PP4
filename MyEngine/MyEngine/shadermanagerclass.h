@@ -12,9 +12,11 @@
 #include "textureshaderclass.h"
 #include "lightshaderclass.h"
 #include "pointlightshaderclass.h"
+#include "spotlightshaderclass.h"
 #include "fontshaderclass.h"
 #include "skyboxshaderclass.h"
 #include "terrainshaderclass.h"
+#include "castleshaderclass.h"
 #include "knightshaderclass.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,19 +36,23 @@ public:
 	bool RenderTextureShader(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*);
 	bool RenderLightShader(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, XMFLOAT3, XMFLOAT4);
 	bool RenderPointLightShader(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, XMFLOAT4[], XMFLOAT4[]);
+	bool RenderSpotLightShader(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, float, XMFLOAT3, XMFLOAT4, XMFLOAT4);
 	bool RenderKnightShader(ID3D11DeviceContext*, int, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, XMFLOAT3, XMFLOAT4);
 	bool RenderFontShader(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, XMFLOAT4);
 	bool RenderSkyboxShader(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*);
 	bool RenderTerrainShader(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, ID3D11ShaderResourceView*, XMFLOAT3, XMFLOAT4);
+	bool RenderCastleShader(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, XMFLOAT3, XMFLOAT4, XMFLOAT4, XMFLOAT4);
 
 private:
 	ColorShaderClass* m_ColorShader;
 	TextureShaderClass* m_TextureShader;
 	LightShaderClass* m_LightShader;
 	PointLightShaderClass* m_PointLightShader;
+	SpotLightShaderClass* m_SpotLightShader;
 	FontShaderClass* m_FontShader;
 	SkyboxShaderClass* m_SkyboxShader;
 	TerrainShaderClass* m_TerrainShader;
+	CastleShaderClass* m_CastleShader;
 	KnightShaderClass* m_KnightShader;
 };
 

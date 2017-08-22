@@ -57,6 +57,8 @@ public:
 	void EnableWireframe();
 	void DisableWireframe();
 
+	void SetBackBufferRenderTarget();
+
 private:
 	bool m_vsync_enabled;
 	int m_videoCardMemory;

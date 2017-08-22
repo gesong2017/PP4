@@ -57,6 +57,30 @@ void LightClass::SetPointLightPosition(float x, float y, float z)
 	return;
 }
 
+void LightClass::SetSpotLightDiffuseColor(float red, float green, float blue, float alpha)
+{
+	m_spotlightdiffuseColor = XMFLOAT4(red, green, blue, alpha);
+	return;
+}
+
+void LightClass::SetSpotLightPosition(float x, float y, float z)
+{
+	m_spotlightPosition = XMFLOAT4(x, y, z, 1.0f);
+	return;
+}
+
+void LightClass::SetSpotLightConeDirection(float x, float y, float z)
+{
+	m_spotlightconeDirection = XMFLOAT3(x, y, z);
+	return;
+}
+
+void LightClass::SetSpotLightConeRatio(float ratio)
+{
+	m_spotlightconeRatio = ratio;
+	return;
+}
+
 XMFLOAT4 LightClass::GetAmbientColor()
 {
 	return m_ambientColor;
@@ -90,3 +114,22 @@ XMFLOAT4 LightClass::GetPointLightPosition()
 	return m_pointlightPosition;
 }
 
+XMFLOAT4 LightClass::GetSpotLightDiffuseColor()
+{
+	return m_spotlightdiffuseColor;
+}
+
+XMFLOAT4 LightClass::GetSpotLightPosition()
+{
+	return m_spotlightPosition;
+}
+
+XMFLOAT3 LightClass::GetSpotLightConeDirection()
+{
+	return m_spotlightconeDirection;
+}
+
+float LightClass::GetSpotLightConeRatio()
+{
+	return m_spotlightconeRatio;
+}
