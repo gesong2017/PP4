@@ -49,7 +49,7 @@ void KnightShaderClass::Shutdown()
 }
 
 
-bool KnightShaderClass::Render(ID3D11DeviceContext* deviceContext, int vertexCount, int instanceCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
+bool KnightShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, int instanceCount, XMMATRIX worldMatrix[], XMMATRIX viewMatrix,
 	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor)
 {
 	bool result;
@@ -63,7 +63,7 @@ bool KnightShaderClass::Render(ID3D11DeviceContext* deviceContext, int vertexCou
 	}
 
 	// Now render the prepared buffers with the shader.
-	RenderShader(deviceContext, vertexCount, instanceCount);
+	RenderShader(deviceContext, indexCount, instanceCount);
 
 	return true;
 }
@@ -330,7 +330,7 @@ void KnightShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND 
 }
 
 
-bool KnightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
+bool KnightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix[], XMMATRIX viewMatrix,
 	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection,
 	XMFLOAT4 diffuseColor)
 {
@@ -339,10 +339,13 @@ bool KnightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, 
 	MatrixBufferType* dataPtr;
 	unsigned int bufferNumber;
 	LightBufferType* dataPtr2;
-
+	int i;
 
 	// Transpose the matrices to prepare them for the shader.
-	worldMatrix = XMMatrixTranspose(worldMatrix);
+	for (i = 0; i < NUM_MODELS; i++)
+	{
+		worldMatrix[i] = XMMatrixTranspose(worldMatrix[i]);
+	}
 	viewMatrix = XMMatrixTranspose(viewMatrix);
 	projectionMatrix = XMMatrixTranspose(projectionMatrix);
 
@@ -357,7 +360,10 @@ bool KnightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, 
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
 
 	// Copy the matrices into the constant buffer.
-	dataPtr->world = worldMatrix;
+	for (i = 0; i < NUM_MODELS; i++)
+	{
+		dataPtr->world[i] = worldMatrix[i];
+	}
 	dataPtr->view = viewMatrix;
 	dataPtr->projection = projectionMatrix;
 
@@ -401,7 +407,7 @@ bool KnightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, 
 }
 
 
-void KnightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int vertexCount, int instanceCount)
+void KnightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount, int instanceCount)
 {
 	// Set the vertex input layout.
 	deviceContext->IASetInputLayout(m_layout);
@@ -414,7 +420,7 @@ void KnightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int ver
 	deviceContext->PSSetSamplers(0, 1, &m_sampleState);
 
 	// Render the triangle.
-	deviceContext->DrawInstanced(vertexCount, instanceCount, 0, 0);
+	deviceContext->DrawIndexedInstanced(indexCount, instanceCount, 0, 0, 0);
 
 	return;
 }

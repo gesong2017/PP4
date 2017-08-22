@@ -295,7 +295,7 @@ bool ShaderManagerClass::RenderSpotLightShader(ID3D11DeviceContext* deviceContex
 	return m_SpotLightShader->Render(deviceContext, indexCount, worldMatrix, viewMatrix, projectionMatrix, texture, coneRatio, lightConeDirection, diffuseColor, lightPosition);
 }
 
-bool ShaderManagerClass::RenderKnightShader(ID3D11DeviceContext* deviceContext, int vertexCount, int instanceCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
+bool ShaderManagerClass::RenderKnightShader(ID3D11DeviceContext* deviceContext, int vertexCount, int instanceCount, XMMATRIX worldMatrix[], XMMATRIX viewMatrix,
 	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection,
 	XMFLOAT4 diffuseColor)
 {

@@ -4,7 +4,8 @@
 #include "zoneclass.h"
 
 ZoneClass::ZoneClass()
-{
+{   
+	rotation = 0;
 	m_UserInterface = 0;
 	m_Camera = 0;
 	m_Light = 0;
@@ -435,6 +436,13 @@ bool ZoneClass::Frame(D3DClass* Direct3D, InputClass* Input, ShaderManagerClass*
 	bool result;
 	float posX, posY, posZ, rotX, rotY, rotZ;
 
+	// update rotation degree
+	rotation += XMConvertToDegrees(0.00005f);
+	if (rotation > 360.0f)
+	{
+		rotation = 0.0f;
+	}
+
 	// initialize random seed: 
 	srand(time(NULL));
 
@@ -667,19 +675,52 @@ bool ZoneClass::Render(D3DClass* Direct3D, ShaderManagerClass* ShaderManager, Te
 	}
 
 	// Render the knight using the knight shader.
-	XMMATRIX knightWorldMatrix;
-	knightWorldMatrix = XMMatrixSet(2.0f*tempmatrix._11, tempmatrix._12, tempmatrix._13, tempmatrix._14,
+	XMMATRIX *knightWorldMatrix = new XMMATRIX[4];
+	if (!knightWorldMatrix)
+	{
+		return false;
+	}
+	knightWorldMatrix[0] = XMMatrixSet(2.0f*tempmatrix._11, tempmatrix._12, tempmatrix._13, tempmatrix._14,
 		tempmatrix._21, 2.0f*tempmatrix._22, tempmatrix._23, tempmatrix._24,
 		tempmatrix._31, tempmatrix._32, 2.0f*tempmatrix._33, tempmatrix._34,
 		180.0f + tempmatrix._41, 9.75f + tempmatrix._42, 515.0f + tempmatrix._43, tempmatrix._44);
 
-	knightWorldMatrix = XMMatrixMultiply(XMMatrixRotationY(380.0f), knightWorldMatrix);
+	knightWorldMatrix[0] = XMMatrixMultiply(XMMatrixRotationY(rotation), knightWorldMatrix[0]);
+
+	knightWorldMatrix[1] = XMMatrixSet(2.0f*tempmatrix._11, tempmatrix._12, tempmatrix._13, tempmatrix._14,
+		tempmatrix._21, 2.0f*tempmatrix._22, tempmatrix._23, tempmatrix._24,
+		tempmatrix._31, tempmatrix._32, 2.0f*tempmatrix._33, tempmatrix._34,
+		180.0f + tempmatrix._41, 9.75f + tempmatrix._42, 515.0f + tempmatrix._43, tempmatrix._44);
+
+	knightWorldMatrix[1] = XMMatrixMultiply(XMMatrixRotationX(rotation), knightWorldMatrix[1]);
+
+	knightWorldMatrix[2] = XMMatrixSet(2.0f*tempmatrix._11, tempmatrix._12, tempmatrix._13, tempmatrix._14,
+		tempmatrix._21, 2.0f*tempmatrix._22, tempmatrix._23, tempmatrix._24,
+		tempmatrix._31, tempmatrix._32, 2.0f*tempmatrix._33, tempmatrix._34,
+		180.0f + tempmatrix._41, 9.75f + tempmatrix._42, 515.0f + tempmatrix._43, tempmatrix._44);
+
+	knightWorldMatrix[2] = XMMatrixMultiply(XMMatrixRotationZ(rotation), knightWorldMatrix[2]);
+
+	knightWorldMatrix[3] = XMMatrixSet(2.0f*tempmatrix._11, tempmatrix._12, tempmatrix._13, tempmatrix._14,
+		tempmatrix._21, 2.0f*tempmatrix._22, tempmatrix._23, tempmatrix._24,
+		tempmatrix._31, tempmatrix._32, 2.0f*tempmatrix._33, tempmatrix._34,
+		180.0f + tempmatrix._41, 9.75f + tempmatrix._42, 515.0f + tempmatrix._43, tempmatrix._44);
+
+	knightWorldMatrix[3] = XMMatrixMultiply(XMMatrixRotationY(-rotation), knightWorldMatrix[3]);
+
 	m_Knight->Render(Direct3D->GetDeviceContext());
-	result = ShaderManager->RenderKnightShader(Direct3D->GetDeviceContext(), m_Knight->GetVertexCount(), m_Knight->GetInstanceCount(), knightWorldMatrix, viewMatrix,
+	result = ShaderManager->RenderKnightShader(Direct3D->GetDeviceContext(), m_Knight->GetIndexCount(), m_Knight->GetInstanceCount(), knightWorldMatrix, viewMatrix,
 		projectionMatrix, m_Knight->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor());
 	if (!result)
 	{
 		return false;
+	}
+
+	// release the knight matrix pointer
+	if (knightWorldMatrix)
+	{
+		delete[] knightWorldMatrix;
+		knightWorldMatrix = 0;
 	}
 
 	// Turn on wire frame rendering of the terrain if needed.

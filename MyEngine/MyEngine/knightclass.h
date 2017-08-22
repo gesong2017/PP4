@@ -44,7 +44,7 @@ public:
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 
-	int GetVertexCount();
+	int GetIndexCount();
 	int GetInstanceCount();
 
 	ID3D11ShaderResourceView* GetTexture();
@@ -59,8 +59,8 @@ private:
 	void ReleaseTexture();
 
 private:
-	ID3D11Buffer *m_vertexBuffer, *m_instanceBuffer;;
-	int m_vertexCount, m_instanceCount;
+	ID3D11Buffer *m_vertexBuffer, *m_instanceBuffer, *m_indexBuffer;
+	int m_vertexCount, m_indexCount, m_instanceCount;
 	TextureClass* m_Texture;
 };
 

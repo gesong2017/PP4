@@ -1,6 +1,8 @@
+#define NUM_MODELS 4
+
 cbuffer MatrixBuffer
 {
-	matrix worldMatrix;
+	matrix worldMatrix[NUM_MODELS];
 	matrix viewMatrix;
 	matrix projectionMatrix;
 };
@@ -20,7 +22,7 @@ struct PixelInputType
 	float3 normal : NORMAL;
 };
 
-PixelInputType main(VertexInputType input)
+PixelInputType main(VertexInputType input, uint index: SV_InstanceID)
 {
 	PixelInputType output;
 
@@ -31,12 +33,12 @@ PixelInputType main(VertexInputType input)
 	float4 pos = float4(input.position, 1.0f);
 
 	// Calculate the position of the vertex against the world, view, and projection matrices.
-	pos = mul(pos, worldMatrix);
+	pos = mul(pos, worldMatrix[index]);
 	pos = mul(pos, viewMatrix);
 	pos = mul(pos, projectionMatrix);
 
 	// Calculate the normal vector against the world matrix only.
-	output.normal = mul(input.normal, (float3x3)worldMatrix);
+	output.normal = mul(input.normal, (float3x3)worldMatrix[index]);
 
 	// Normalize the normal vector.
 	output.normal = normalize(output.normal);

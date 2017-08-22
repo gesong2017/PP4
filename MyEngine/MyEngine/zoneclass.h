@@ -64,6 +64,7 @@ private:
 	DragonClass* m_Dragon;
 	TowerClass* m_Tower;
 	bool m_displayUI, m_wireFrame, m_cellLines;
+	float rotation;
 };
 
 #endif

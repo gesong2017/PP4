@@ -8,6 +8,7 @@ KnightClass::KnightClass()
 {
 	m_vertexBuffer = 0;
 	m_instanceBuffer = 0;
+	m_indexBuffer = 0;
 	m_Texture = 0;
 }
 
@@ -66,9 +67,9 @@ void KnightClass::Render(ID3D11DeviceContext* deviceContext)
 }
 
 
-int KnightClass::GetVertexCount()
+int KnightClass::GetIndexCount()
 {
-	return m_vertexCount;
+	return m_indexCount;
 }
 
 
@@ -89,8 +90,9 @@ bool KnightClass::InitializeBuffers(ID3D11Device* device, WCHAR* modelFilename)
 	vector<XMFLOAT2> verticesUV;
 	vector<XMFLOAT3> verticesNormal;
 	vector<Vertex> modelvertices;
-	D3D11_BUFFER_DESC vertexBufferDesc, instanceBufferDesc;
-	D3D11_SUBRESOURCE_DATA vertexData, instanceData;
+	vector<unsigned long> modelIndices;
+	D3D11_BUFFER_DESC vertexBufferDesc, instanceBufferDesc, indexBufferDesc;
+	D3D11_SUBRESOURCE_DATA vertexData, instanceData, indexData;
 	bool result;
 	HRESULT hResult;
 
@@ -107,6 +109,7 @@ bool KnightClass::InitializeBuffers(ID3D11Device* device, WCHAR* modelFilename)
 		temp.uv = verticesUV[i];
 		temp.normal = verticesNormal[i];
 		modelvertices.push_back(temp);
+		modelIndices.push_back(i);
 	}
 
 	// Set up the description of the static vertex buffer.
@@ -167,6 +170,27 @@ bool KnightClass::InitializeBuffers(ID3D11Device* device, WCHAR* modelFilename)
 		return false;
 	}
 
+	// Set up the description of the static index buffer.
+	m_indexCount = modelIndices.size();
+	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	indexBufferDesc.ByteWidth = sizeof(unsigned long) * m_indexCount;
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.MiscFlags = 0;
+	indexBufferDesc.StructureByteStride = 0;
+
+	// Give the subresource structure a pointer to the index data.
+	indexData.pSysMem = &modelIndices[0];
+	indexData.SysMemPitch = 0;
+	indexData.SysMemSlicePitch = 0;
+
+	// Create the index buffer.
+	hResult = device->CreateBuffer(&indexBufferDesc, &indexData, &m_indexBuffer);
+	if (FAILED(hResult))
+	{
+		return false;
+	}
+
 	// Release the instance array now that the instance buffer has been created and loaded.
 	delete[] instances;
 	instances = 0;
@@ -176,7 +200,14 @@ bool KnightClass::InitializeBuffers(ID3D11Device* device, WCHAR* modelFilename)
 
 
 void KnightClass::ShutdownBuffers()
-{
+{   
+	// Release the index buffer.
+	if (m_indexBuffer)
+	{
+		m_indexBuffer->Release();
+		m_indexBuffer = 0;
+	}
+
 	// Release the instance buffer.
 	if (m_instanceBuffer)
 	{
@@ -215,6 +246,9 @@ void KnightClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 
 	// Set the vertex buffer to active in the input assembler so it can be rendered.
 	deviceContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+
+	// Set the index buffer to active in the input assembler so it can be rendered.
+	deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 	// Set the type of primitive that should be rendered from this vertex buffer, in this case triangles.
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
